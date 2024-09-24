@@ -28,8 +28,6 @@ __plugin_meta__ = PluginMetadata(
     supported_adapters={"~onebot.v11"},
 )
 
-# 获取超级用户列表
-SUPERUSERS = get_driver().config.superusers
 
 # 定义API URLs
 API_URLS = {
@@ -107,7 +105,7 @@ async def handle_command(matcher: Matcher, command_key: str, params: dict = None
         else:
             msg = "响应格式不正确，请稍后再试喵~"
     else:
-    msg = data.get("data", "没有获取到内容") if "data" in data else data
+        msg = data.get("data", "没有获取到内容") if "data" in data else data
 
     await matcher.send(msg)
 
@@ -255,4 +253,3 @@ async def shenhuifu(matcher: Matcher, args: Message = CommandArg()):
         await matcher.send(shenhuifu_response)
     else:
         await matcher.send("没有获取到神回复内容喵~")
-
