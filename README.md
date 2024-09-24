@@ -11,10 +11,7 @@ _✨趣味内容插件✨_
 </div>
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/kexue-z/nonebot-plugin-setu-now/master/LICENSE">
-    <img src="https://img.shields.io/github/license/kexue-z/nonebot-plugin-setu-now.svg" alt="license">
-  </a>
-  <a href="https://pypi.org/project/nonebot-plugin-setu-now/">
+  <a href="https://pypi.org/project/nonebot-plugin-fun-content/">
     <img src="https://img.shields.io/pypi/v/nonebot-plugin-fun-content" alt="pypi">
   </a>
   <img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="python">
