@@ -1,18 +1,16 @@
 ﻿[tool.poetry]
-name = "nonebot-plugin-fun-content"  # 插件名称
-version = "0.1.0"  # 插件版本
-description = "从多个 API 获取趣味内容，如一言、土味情话、舔狗日记等。"  # 插件描述
-authors = ["Chensiyu <rk.chensiyu@gmail.com>"]  # 作者信息
-license = "MIT"  # 插件许可协议
-readme = "README.md"  # 读取的自述文件
+name = "nonebot-plugin-fun-content"
+version = "0.1.0"
+description = "从多个 API 获取趣味内容，如一言、土味情话、舔狗日记等。"
+authors = ["Chensiyu <rk.chensiyu@gmail.com>"]
+license = "MIT"
+readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"  # Python 版本
-nonebot2 = "^2.3"  # Nonebot 版本
-httpx = "^0.23.0"  # 用于异步 HTTP 请求的库
-nonebot-adapter-onebot = "^2.0"  # OneBot适配器
-nonebot-plugin-apscheduler = ">=0.4.0"  # 用于定时任务的插件
+python = "^3.10"
+httpx = "^0.23.0"
+nonebot2 = "^2.3"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]  # 构建系统要求
-build-backend = "poetry.core.masonry.api"  # 构建后端配置
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
