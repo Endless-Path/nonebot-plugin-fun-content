@@ -3,16 +3,17 @@ name: Publish
 on:
   push:
     tags:
-      - "v*.*.*"
-  workflow_dispatch:
+      - "v*.*.*"  # 触发工作流的标签模式
+  workflow_dispatch:  # 允许手动触发工作流
 
 jobs:
   pypi-publish:
     name: Upload release to PyPI
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # 指定使用的操作系统
+
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3  # 检出代码库
       - name: Build and publish to pypi
-        uses: JRubics/poetry-publish@v2.0
+        uses: JRubics/poetry-publish@v2.0  # 使用 JRubics 的 poetry-publish 插件
         with:
-          pypi_token: ${{ secrets.PYPI_TOKEN }}
+          pypi_token: ${{ secrets.PYPI_TOKEN }}  # 从 GitHub Secrets 获取 PyPI 令牌
