@@ -18,6 +18,10 @@
 
     pip install nonebot-plugin-fun-content
 
+打开 nonebot2 项目根目录下的 `pyproject.toml` 文件, 在 `[tool.nonebot]` 部分追加写入
+
+    plugins = ["nonebot_plugin_template"]
+
 </details>
 
 ## 🎉指令列表
@@ -32,10 +36,3 @@
 | 随机白丝 | 所有人 | 否 | 群聊 | 获取随机白丝内容 |
 | cp <角色1> <角色2> | 所有人 | 否 | 群聊 | 获取宇宙CP文 |
 | 神回复 | 所有人 | 否 | 群聊 | 获取神回复内容 |
-
-## 🔧功能开关
-超级用户可以通过以下指令开启或关闭功能：
-- 开启 <功能名>
-- 关闭 <功能名>
-
-例如：
