@@ -18,6 +18,10 @@
 
     pip install nonebot-plugin-fun-content
 
+打开 nonebot2 项目根目录下的 `pyproject.toml` 文件, 在 `[tool.nonebot]` 部分追加写入
+
+    plugins = ["nonebot_plugin_template"]
+
 </details>
 
 ## 🎉指令列表
