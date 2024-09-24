@@ -15,8 +15,8 @@ requires-python = ">=3.9"
 readme = "README.md"
 
 [project.urls]
-Homepage = "https://github.com/chensiyu/nonebot-plugin-fun-content"  # 替换为你的项目主页
-Repository = "https://github.com/chensiyu/nonebot-plugin-fun-content"  # 替换为你的项目仓库
+Homepage = "https://github.com/chensiyu/nonebot-plugin-fun-content"
+Repository = "https://github.com/chensiyu/nonebot-plugin-fun-content"
 
 [build-system]
 requires = ["pdm-pep517>=0.12.0"]
