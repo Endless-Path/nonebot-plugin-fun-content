@@ -1,0 +1,23 @@
+[project]
+name = "nonebot-plugin-fun-content"
+version = "0.1.0"
+description = "从多个 API 获取趣味内容，如一言、土味情话、舔狗日记等。"
+authors = [
+    {name = "你的名字", email = "your.email@example.com"},
+]
+license = {text = "MIT"}
+dependencies = [
+    "nonebot2>=2.0.0b2", 
+    "nonebot-adapter-onebot>=2.0.0b1", 
+    "httpx>=0.23.1"
+]
+requires-python = ">=3.8"
+readme = "README.md"
+
+[project.urls]
+Homepage = "https://github.com/yourusername/nonebot-plugin-fun-content"  # 替换为你的项目主页
+Repository = "https://github.com/yourusername/nonebot-plugin-fun-content"  # 替换为你的项目仓库
+
+[build-system]
+requires = ["pdm-pep517>=0.12.0"]
+build-backend = "pdm.pep517.api"
