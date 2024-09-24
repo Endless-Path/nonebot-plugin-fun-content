@@ -24,7 +24,7 @@ __plugin_meta__ = PluginMetadata(
     - 神回复: 获取神回复内容，使用命令 `神回复` 或 `神评`。
     """,
     type="application",
-    homepage="https://github.com/yourusername/your-repo",
+    homepage="https://github.com/chsiyu/nonebot-plugin-fun-content",
     supported_adapters={"~onebot.v11"},
 )
 
@@ -88,7 +88,27 @@ async def handle_command(matcher: Matcher, command_key: str, params: dict = None
         await matcher.send(data["error"])
         return
 
+    # 处理不同 API 的返回格式
+    if command_key == "twq":
+        msg = data.get("content", "没有获取到土味情话喵~")
+    elif command_key == "weibo_hot":
+        if data.get("code") == 200:
+            hot_data = data.get("data", [])
+            if hot_data:
+                hot_msg = "当前微博热搜：\n"
+                for item in hot_data[:10]:
+                    hot_msg += f"热搜排名: {item.get('index', '未知')}\n"
+                    hot_msg += f"热搜标题: {item.get('title', '没有标题')}\n"
+                    hot_msg += f"热搜热度: {item.get('hot', '未知')}\n"
+                    hot_msg += f"链接: {item.get('url', '没有链接')}\n\n"
+                msg = hot_msg.strip()
+            else:
+                msg = "没有获取到微博热搜内容喵~"
+        else:
+            msg = "响应格式不正确，请稍后再试喵~"
+    else:
     msg = data.get("data", "没有获取到内容") if "data" in data else data
+
     await matcher.send(msg)
 
 async def handle_no_arg_command(matcher: Matcher, command_key: str):
@@ -133,28 +153,7 @@ async def weibo_hot(matcher: Matcher, args: Message = CommandArg()):
     if args:
         await matcher.send("请不要带参数喵~")
         return
-
-    data = await fetch_data(API_URLS["weibo_hot"])
-    if isinstance(data, dict) and "error" in data:
-        await matcher.send(data["error"])
-        return
-
-    if isinstance(data, dict) and data.get("code") == 200:
-        hot_data = data.get("data", [])
-        
-        if hot_data:
-            hot_msg = "当前微博热搜：\n"
-            for item in hot_data[:10]:
-                hot_msg += f"热搜排名: {item.get('index', '未知')}\n"
-                hot_msg += f"热搜标题: {item.get('title', '没有标题')}\n"
-                hot_msg += f"热搜热度: {item.get('hot', '未知')}\n"
-                hot_msg += f"链接: {item.get('url', '没有链接')}\n\n"
-
-            await matcher.send(hot_msg.strip())
-        else:
-            await matcher.send("没有获取到微博热搜内容喵~")
-    else:
-        await matcher.send("响应格式不正确，请稍后再试喵~")
+    await handle_no_arg_command(matcher, "weibo_hot")
 
 @commands["aiqinggongyu"].handle()
 async def aiqinggongyu(matcher: Matcher, args: Message = CommandArg()):
