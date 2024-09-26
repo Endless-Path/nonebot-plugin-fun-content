@@ -52,15 +52,15 @@ _✨趣味内容插件✨_
 
 |   config    | type | default |    example     |           usage            |
 | :---------: | :--: | :-----: | :------------: | :------------------------: |
-|   hitokoto    | int  |   20    |  hitokoto = 20   |  调用“一言”cd的默认值   |
-|  twq   | int  |   20    |  twq = 20   | 调用“土味情话”cd的默认值 |
-|  dog   | int  |   20    |  dog = 20   |    调用“舔狗日记”cd的默认值    |
-| renjian | int  |   20    | renjian = 20 |    调用“人间凑数”cd的默认值    |
-|   weibo_hot    | int  |   20    |  weibo_hot = 20   |  调用“微博热搜”cd的默认值   |
-|  aiqinggongyu    | int  |   20    |  aiqinggongyu = 20   |  调用“爱情公寓”cd的默认值   |
-|   baisi    | int  |   20    |  baisi = 20   |  调用“随机白丝”cd的默认值   |
-|   cp    | int  |   20    |  cp = 20   |  调用“宇宙cp”cd的默认值   |
-|   shenhuifu    | int  |   20    |  shenhuifu = 20   |  调用“神回复”cd的默认值   |
+|   hitokoto    | int  |   20    |  hitokoto_cd = 20   |  调用“一言”cd的默认值   |
+|  twq   | int  |   20    |  twq_cd = 20   | 调用“土味情话”cd的默认值 |
+|  dog   | int  |   20    |  dog_cd = 20   |    调用“舔狗日记”cd的默认值    |
+| renjian | int  |   20    | renjian_cd = 20 |    调用“人间凑数”cd的默认值    |
+|   weibo_hot    | int  |   20    |  weibo_hot_cd = 20   |  调用“微博热搜”cd的默认值   |
+|  aiqinggongyu    | int  |   20    |  aiqinggongyu_cd = 20   |  调用“爱情公寓”cd的默认值   |
+|   baisi    | int  |   20    |  baisi_cd = 20   |  调用“随机白丝”cd的默认值   |
+|   cp    | int  |   20    |  cp_cd = 20   |  调用“宇宙cp”cd的默认值   |
+|   shenhuifu    | int  |   20    |  shenhuifu_cd = 20   |  调用“神回复”cd的默认值   |
 
 ## 🎉 指令列表
 > 你可能需要在env里配置指令响应头 " / "，取决于你的command_start设置
