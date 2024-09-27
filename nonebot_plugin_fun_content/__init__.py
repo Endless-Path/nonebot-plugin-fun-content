@@ -11,18 +11,26 @@ from .utils import utils
 __plugin_meta__ = PluginMetadata(
     name="趣味内容插件",
     description="从多个 API 获取趣味内容，如一言、土味情话、舔狗日记等。",
-    usage="""
-    使用方法:
-    - 一言: 获取一句话的灵感，使用命令 `一言` 或 `一句`。
-    - 土味情话: 获取土味情话，使用命令 `土味情话`、`情话` 或 `土味`。
-    - 舔狗日记: 获取舔狗日记，使用命令 `舔狗日记`、`dog` 或 `舔狗`。
-    - 人间凑数: 获取人间凑数内容，使用命令 `人间凑数` 或 `我在人间凑数的日子`。
-    - 微博热搜: 获取微博热搜，使用命令 `微博热搜`、`热搜` 或 `微博`。
-    - 爱情公寓: 获取爱情公寓语录，使用命令 `爱情公寓`、`爱情语录` 或 `爱公寓`。
-    - 随机白丝: 获取随机白丝内容，使用命令 `随机白丝`、`白丝` 或 `随机图`。
-    - 宇宙CP文: 获取宇宙CP文，使用命令 `cp <角色1> <角色2>`。
-    - 神回复: 获取神回复内容，使用命令 `神回复` 或 `神评`。
-    """,
+    usage=(
+        "- 一言\n"
+        "发送 “一言” 或 “一句” 获取一句话的灵感。\n"
+        "- 土味情话\n"
+        "发送 “土味情话”、“情话” 或 “土味” 获取土味情话。\n"
+        "- 舔狗日记\n"
+        "发送 “舔狗日记”、“dog” 或 “舔狗” 获取舔狗日记。\n"
+        "- 人间凑数\n"
+        "发送 “人间凑数” 或 “我在人间凑数的日子” 获取人间凑数内容。\n"
+        "- 微博热搜\n"
+        "发送 “微博热搜”、“热搜” 或 “微博” 获取微博热搜。\n"
+        "- 爱情公寓\n"
+        "发送 “爱情公寓”、“爱情语录” 或 “爱公寓” 获取爱情公寓语录。\n"
+        "- 随机白丝\n"
+        "发送 “随机白丝”、“白丝” 或 “随机图” 获取随机白丝内容。\n"
+        "- 宇宙CP文\n"
+        "发送 “cp <角色1> <角色2>” 获取宇宙CP文。\n"
+        "- 神回复\n"
+        "发送 “神回复” 或 “神评” 获取神回复内容。\n"
+    ),
     type="application",
     homepage="https://github.com/chsiyu/nonebot-plugin-fun-content",
     supported_adapters={"~onebot.v11"},
@@ -68,8 +76,12 @@ async def fetch_data(url: str, params: dict = None) -> dict:
         logger.error(f"发生错误: {e}，URL: {url}")
         return {"error": "发生未知错误，请稍后再试喵~"}
 
-async def handle_command(matcher: Matcher, command_key: str, event: MessageEvent):
-    """处理命令，获取数据并返回"""
+async def handle_command_with_cooldown(matcher: Matcher, command_key: str, event: MessageEvent, args: Message = CommandArg()):
+    """处理命令并检查冷却时间"""
+    if args:
+        await matcher.send("请不要带参数喵~")
+        return
+
     group_id = str(event.group_id)  # 获取群组 ID
     user_id = str(event.user_id)     # 获取用户 ID
 
@@ -116,61 +128,49 @@ def handle_weibo_hot(data: dict) -> str:
 @commands["hitokoto"].handle()
 async def hitokoto(matcher: Matcher, event: MessageEvent, args: Message = CommandArg()):
     """一言命令处理"""
-    if args:
-        await matcher.send("请不要带参数喵~")
-        return
-    await handle_command(matcher, "hitokoto", event)
+    await handle_command_with_cooldown(matcher, "hitokoto", event, args)
 
 @commands["twq"].handle()
 async def twq(matcher: Matcher, event: MessageEvent, args: Message = CommandArg()):
     """土味情话命令处理"""
-    if args:
-        await matcher.send("请不要带参数喵~")
-        return
-    await handle_command(matcher, "twq", event)
+    await handle_command_with_cooldown(matcher, "twq", event, args)
 
 @commands["dog"].handle()
 async def lickdog_diary(matcher: Matcher, event: MessageEvent, args: Message = CommandArg()):
     """舔狗日记命令处理"""
-    if args:
-        await matcher.send("请不要带参数喵~")
-        return
-    await handle_command(matcher, "dog", event)
+    await handle_command_with_cooldown(matcher, "dog", event, args)
 
 @commands["renjian"].handle()
 async def renjian(matcher: Matcher, event: MessageEvent, args: Message = CommandArg()):
     """人间凑数命令处理"""
-    if args:
-        await matcher.send("请不要带参数喵~")
-        return
-    await handle_command(matcher, "renjian", event)
+    await handle_command_with_cooldown(matcher, "renjian", event, args)
 
 @commands["weibo_hot"].handle()
 async def weibo_hot(matcher: Matcher, event: MessageEvent, args: Message = CommandArg()):
     """微博热搜命令处理"""
-    if args:
-        await matcher.send("请不要带参数喵~")
-        return
-    await handle_command(matcher, "weibo_hot", event)
+    await handle_command_with_cooldown(matcher, "weibo_hot", event, args)
 
 @commands["aiqinggongyu"].handle()
 async def aiqinggongyu(matcher: Matcher, event: MessageEvent, args: Message = CommandArg()):
     """爱情公寓语录命令处理"""
-    if args:
-        await matcher.send("请不要带参数喵~")
-        return
-    await handle_command(matcher, "aiqinggongyu", event)
+    await handle_command_with_cooldown(matcher, "aiqinggongyu", event, args)
 
 @commands["baisi"].handle()
 async def baisi(matcher: Matcher, event: MessageEvent, args: Message = CommandArg()):
     """随机白丝命令处理"""
-    if args:
-        await matcher.send("请不要带参数喵~")
+    group_id = str(event.group_id)  # 获取群组 ID
+    user_id = str(event.user_id)     # 获取用户 ID
+
+    if utils.is_in_cooldown("baisi", user_id, group_id):
+        remaining_cd = utils.get_cooldown_time("baisi", user_id, group_id)
+        await matcher.send(f"指令冷却中，请等待 {int(remaining_cd)} 秒再试喵~")
         return
 
     try:
         image_content = await get_baisi_image()
         await matcher.send(MessageSegment.image(image_content))
+        # 设置冷却时间
+        utils.set_cooldown("baisi", user_id, group_id)
     except Exception as e:
         logger.error(f"发生错误: {e}")
         await matcher.send("获取随机白丝内容失败喵~")
@@ -200,6 +200,14 @@ async def get_baisi_image() -> str:
 @commands["cp"].handle()
 async def cp(matcher: Matcher, event: MessageEvent, args: Message = CommandArg()):
     """宇宙CP文命令处理"""
+    group_id = str(event.group_id)  # 获取群组 ID
+    user_id = str(event.user_id)     # 获取用户 ID
+
+    if utils.is_in_cooldown("cp", user_id, group_id):
+        remaining_cd = utils.get_cooldown_time("cp", user_id, group_id)
+        await matcher.send(f"指令冷却中，请等待 {int(remaining_cd)} 秒再试喵~")
+        return
+
     user_input = args.extract_plain_text().strip().lower()
     args_without_punctuation = user_input.translate(str.maketrans('', '', string.punctuation))
 
@@ -234,6 +242,8 @@ async def cp(matcher: Matcher, event: MessageEvent, args: Message = CommandArg()
                 await matcher.send(MessageSegment.image(response.content))
             else:
                 await matcher.send("返回内容格式不正确，请稍后再试喵~")
+            # 设置冷却时间
+            utils.set_cooldown("cp", user_id, group_id)
     
     except httpx.HTTPStatusError as e:
         logger.error(f"请求失败，状态码: {e.response.status_code}，URL: {url}")
@@ -244,7 +254,6 @@ async def cp(matcher: Matcher, event: MessageEvent, args: Message = CommandArg()
 
 def validate_character_names(name1: str, name2: str) -> bool:
     """验证角色名称是否合法"""
-    # 这里可以添加更多的验证逻辑，比如长度限制、字符限制等
     return all(name.isalnum() and len(name) <= 20 for name in [name1, name2])
 
 @commands["shenhuifu"].handle()
@@ -252,6 +261,14 @@ async def shenhuifu(matcher: Matcher, event: MessageEvent, args: Message = Comma
     """神回复命令处理"""
     if args:
         await matcher.send("请不要带参数喵~")
+        return
+
+    group_id = str(event.group_id)  # 获取群组 ID
+    user_id = str(event.user_id)     # 获取用户 ID
+
+    if utils.is_in_cooldown("shenhuifu", user_id, group_id):
+        remaining_cd = utils.get_cooldown_time("shenhuifu", user_id, group_id)
+        await matcher.send(f"指令冷却中，请等待 {int(remaining_cd)} 秒再试喵~")
         return
 
     data = await fetch_data(API_URLS["shenhuifu"])
@@ -267,5 +284,8 @@ async def shenhuifu(matcher: Matcher, event: MessageEvent, args: Message = Comma
         shenhuifu_response = shenhuifu_response.replace("<br>", "\n")
         
         await matcher.send(shenhuifu_response)
+        # 设置冷却时间
+        utils.set_cooldown("shenhuifu", user_id, group_id)
     else:
         await matcher.send("没有获取到神回复内容喵~")
+
