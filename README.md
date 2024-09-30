@@ -49,7 +49,7 @@ _✨趣味内容插件✨_
 ## 配置
 
 在bot目录对应的.env.*文件中添加（有默认值，单位：秒，默认cd20秒，cd=0为不限制）
-```json
+```dotenv
 FUN_CONTENT_COOLDOWNS='
 {
 	"hitokoto": 10, 
