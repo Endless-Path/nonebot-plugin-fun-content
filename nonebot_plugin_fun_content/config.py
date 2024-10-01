@@ -1,6 +1,7 @@
 from pydantic import BaseModel, HttpUrl, Field
 from typing import Dict
-import json
+from pathlib import Path
+from nonebot import get_driver
 
 class Config(BaseModel):
     fun_content_api_urls: Dict[str, HttpUrl] = Field(
@@ -33,4 +34,12 @@ class Config(BaseModel):
         env="FUN_CONTENT_COOLDOWNS"
     )
 
-config = Config()
+    # 新增配置项：禁用功能文件路径
+    disabled_functions_file: Path = Field(
+        default=Path(__file__).parent / "disabled_functions.json",
+        env="DISABLED_FUNCTIONS_FILE"
+    )
+
+driver = get_driver()
+global_config = driver.config
+plugin_config = Config.parse_obj(global_config)
