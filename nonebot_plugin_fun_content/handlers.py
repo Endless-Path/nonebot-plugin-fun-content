@@ -1,75 +1,141 @@
 from nonebot import on_command
-from nonebot.adapters.onebot.v11 import MessageSegment, Message, MessageEvent
+from nonebot.adapters.onebot.v11 import MessageSegment, Message, MessageEvent, GroupMessageEvent
 from nonebot.matcher import Matcher
 from nonebot.params import CommandArg
-from .utils import Utils
-from .api import API
-from .config import config
+from nonebot.permission import SUPERUSER
+from nonebot.adapters.onebot.v11.permission import GROUP_ADMIN, GROUP_OWNER
+from .utils import utils
+from .api import api
+from .config import plugin_config
+import logging
+import httpx
+from io import BytesIO
 
-# 初始化工具类和 API 类
-utils = Utils()
-api = API()  
+# 设置日志记录
+logger = logging.getLogger(__name__)
+
+# 定义命令及其别名
+COMMANDS = {
+    "hitokoto": ("一言", []),
+    "twq": ("土味情话", ["情话", "土味"]),
+    "dog": ("舔狗日记", ["dog", "舔狗"]),
+    "renjian": ("人间凑数", []),
+    "weibo_hot": ("微博热搜", ["微博"]),
+    "aiqinggongyu": ("爱情公寓", []),
+    "baisi": ("随机白丝", ["白丝"]),
+    "cp": ("cp", ["宇宙cp"]),
+    "shenhuifu": ("神回复", ["神评"]),
+}
 
 def register_handlers():
-    """
-    注册所有命令处理器
-    """
-    commands = {
-        "hitokoto": on_command("一言"),
-        "twq": on_command("土味情话", aliases={"情话", "土味"}),
-        "dog": on_command("舔狗日记", aliases={"dog", "舔狗"}),
-        "renjian": on_command("人间凑数"),
-        "weibo_hot": on_command("微博热搜", aliases={"微博"}),
-        "aiqinggongyu": on_command("爱情公寓"),
-        "baisi": on_command("随机白丝", aliases={"白丝"}),
-        "cp": on_command("cp", aliases={"宇宙cp"}),
-        "shenhuifu": on_command("神回复", aliases={"神评"}),
-    }
-
-    for cmd, matcher in commands.items():
+    # 注册命令处理器
+    for cmd, (main_alias, other_aliases) in COMMANDS.items():
+        matcher = on_command(main_alias, aliases=set(other_aliases), priority=5)
         matcher.handle()(handle_command(cmd))
 
-def handle_command(command: str):
-    """
-    通用命令处理函数
-    :param command: 命令名称
-    :return: 异步处理函数
-    """
-    async def handler(matcher: Matcher, event: MessageEvent, args: Message = CommandArg()):
-        # 检查参数（除了 cp 命令外，其他命令不应该有参数）
-        if args and command != "cp":
-            await matcher.send("请不要带参数喵~")
-            return
+    # 注册启用和禁用命令
+    enable_cmd = on_command("开启", 
+                            permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
+                            priority=1, block=True)
+    disable_cmd = on_command("关闭", 
+                             permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
+                             priority=1, block=True)
+    status_cmd = on_command("功能状态", 
+                            permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
+                            priority=1, block=True)
 
-        group_id = str(event.group_id)
+    enable_cmd.handle()(handle_enable)
+    disable_cmd.handle()(handle_disable)
+    status_cmd.handle()(handle_status)
+
+async def handle_enable(matcher: Matcher, event: GroupMessageEvent, args: Message = CommandArg()):
+    """处理启用功能的命令"""
+    function = args.extract_plain_text().strip()
+    group_id = str(event.group_id)
+
+    for cmd, (main_alias, other_aliases) in COMMANDS.items():
+        if function == main_alias or function in other_aliases:
+            utils.enable_function(group_id, cmd)
+            await matcher.finish(f"{main_alias}已启用。")
+    
+    await matcher.finish(f"未找到名为 '{function}' 的功能。")
+
+async def handle_disable(matcher: Matcher, event: GroupMessageEvent, args: Message = CommandArg()):
+    """处理禁用功能的命令"""
+    function = args.extract_plain_text().strip()
+    group_id = str(event.group_id)
+
+    for cmd, (main_alias, other_aliases) in COMMANDS.items():
+        if function == main_alias or function in other_aliases:
+            utils.disable_function(group_id, cmd)
+            await matcher.finish(f"{main_alias}已禁用。")
+    
+    await matcher.finish(f"未找到名为 '{function}' 的功能。")
+
+async def handle_status(matcher: Matcher, event: GroupMessageEvent):
+    """获取当前群组功能状态"""
+    group_id = str(event.group_id)
+    status_messages = []
+    for cmd, (main_alias, _) in COMMANDS.items():
+        status = "已启用" if utils.is_function_enabled(group_id, cmd) else "已禁用"
+        status_messages.append(f"{main_alias}: {status}")
+    
+    await matcher.finish("\n".join(status_messages))
+
+def handle_command(command: str):
+    """返回命令处理函数"""
+    async def handler(matcher: Matcher, event: MessageEvent, args: Message = CommandArg()):
+        # 检查是否为群消息事件
+        if isinstance(event, GroupMessageEvent):
+            group_id = str(event.group_id)
+            if not utils.is_function_enabled(group_id, command):
+                logger.info(f"Function {command} is disabled in group {group_id}")
+                await matcher.finish(f"该功能在本群已被禁用")
+
+        # 检查命令是否允许参数
+        if not COMMANDS[command]["allow_args"] and args.extract_plain_text().strip():
+            # 如果命令不允许参数但用户提供了参数，直接结束处理而不发送任何消息
+            await matcher.finish()
+
         user_id = str(event.user_id)
+        group_id = str(event.group_id) if isinstance(event, GroupMessageEvent) else "private"
 
         # 检查冷却时间
+        cooldown = plugin_config.fun_content_cooldowns.get(command, 20)
         if utils.is_in_cooldown(command, user_id, group_id):
             remaining_cd = utils.get_cooldown_time(command, user_id, group_id)
-            await matcher.send(f"指令冷却中，请等待 {int(remaining_cd)} 秒再试喵~")
-            return
+            logger.info(f"Command {command} is in cooldown for user {user_id} in group {group_id}")
+            await matcher.finish(f"指令冷却中，请等待 {int(remaining_cd)} 秒再试喵~")
 
         try:
-            # 处理不同的命令
+            # 根据命令类型调用相应的 API
             if command == "cp":
-                url = await api.get_cp_content(args.extract_plain_text().strip())
-                await matcher.send(MessageSegment.image(url))
-                utils.set_cooldown(command, user_id, group_id)
-                return
+                image_data = await api.get_cp_content(args.extract_plain_text().strip())
+                try:
+                    await matcher.send(MessageSegment.image(BytesIO(image_data)))
+                except Exception as e:
+                    logger.error(f"Failed to send image for CP command: {e}")
+                    await matcher.send("CP 图片生成成功，但发送失败。请稍后再试。")
             elif command == "baisi":
                 image_url = await api.get_baisi_image()
-                await matcher.send(MessageSegment.image(image_url))
-                utils.set_cooldown(command, user_id, group_id)
-                return
+                try:
+                    await matcher.send(MessageSegment.image(image_url))
+                except Exception as e:
+                    logger.error(f"Failed to send image for Baisi command: {e}")
+                    await matcher.send(f"白丝图片获取成功，但发送失败。请访问以下链接查看：{image_url}")
             else:
                 result = await api.get_content(command)
-
-            await matcher.send(result)
-            utils.set_cooldown(command, user_id, group_id)
+                await matcher.send(result)
+            
+            utils.set_cooldown(command, user_id, group_id, cooldown)
         except ValueError as e:
-            await matcher.send(str(e))
+            logger.error(f"ValueError in {command} command: {str(e)}")
+            await matcher.send(f"出错了：{str(e)}")
+        except httpx.HTTPError as e:
+            logger.error(f"HTTP error in {command} command: {str(e)}")
+            await matcher.send(f"网络请求错误：{str(e)}")
         except Exception as e:
-            await matcher.send("发生未知错误，请稍后再试喵~")
+            logger.error(f"Unexpected error in {command} command: {str(e)}", exc_info=True)
+            await matcher.send(f"发生未知错误：{str(e)}，请稍后再试")
 
     return handler
