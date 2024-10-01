@@ -48,8 +48,9 @@ _✨趣味内容插件✨_
 
 ## 配置
 
-在bot目录对应的.env.*文件中添加（有默认值，单位：秒，默认cd20秒，cd=0为不限制）
+在bot目录对应的.env.*文件（一般为`.env.prod`）中添加
 ```dotenv
+#命令冷却时间配置（单位：秒,默认为20，可不配置）
 FUN_CONTENT_COOLDOWNS='
 {
 	"hitokoto": 10, 
@@ -63,6 +64,12 @@ FUN_CONTENT_COOLDOWNS='
 	"shenhuifu": 0
 }
 '
+#禁用功能文件路径配置（默认在插件目录下，可不配置）
+#Linux
+DISABLED_FUNCTIONS_FILE="/home/user/bot/data/disabled_functions.json"
+#Windows
+DISABLED_FUNCTIONS_FILE="C:/Users/YourUsername/Documents/bot/data/disabled_functions.json"
+
 ```
 
 ## 🎉 指令列表
@@ -80,9 +87,16 @@ FUN_CONTENT_COOLDOWNS='
 | 宇宙cp/cp 角色1 角色2 | 所有人 | 否 | 群聊 | 获取宇宙CP文 |
 | 神回复/神评 | 所有人 | 否 | 群聊 | 获取神回复内容 |
 
+## 管理命令（仅限超级用户、群主、管理员）
+|指令|说明|
+|:-----:|:----:|
+|关闭 [功能名]| 在当前群禁用指定功能|
+|开启 [功能名]| 在当前群启用指定功能|
+|功能状态| 查看当前群组的功能禁用状态|
+
 ## 将来可能支持的功能
 - [x] 增加CD限制
-- [ ] 增加指令开关
+- [x] 增加指令开关
 - [ ] 增加图片发送
 - [ ] 加入定时计划
 - [ ] API调用优化
