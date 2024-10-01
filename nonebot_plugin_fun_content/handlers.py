@@ -10,26 +10,28 @@ from .config import plugin_config
 import logging
 import httpx
 from io import BytesIO
+from typing import Dict, Tuple, List, Union
 
 # 设置日志记录
 logger = logging.getLogger(__name__)
 
-# 定义命令及其别名
-COMMANDS = {
-    "hitokoto": ("一言", []),
-    "twq": ("土味情话", ["情话", "土味"]),
-    "dog": ("舔狗日记", ["dog", "舔狗"]),
-    "renjian": ("人间凑数", []),
-    "weibo_hot": ("微博热搜", ["微博"]),
-    "aiqinggongyu": ("爱情公寓", []),
-    "baisi": ("随机白丝", ["白丝"]),
-    "cp": ("cp", ["宇宙cp"]),
-    "shenhuifu": ("神回复", ["神评"]),
+# 定义命令及其别名，以及是否允许参数
+COMMANDS: Dict[str, Dict[str, Union[Tuple[str, List[str]], bool]]] = {
+    "hitokoto": {"aliases": ("一言", []), "allow_args": False},
+    "twq": {"aliases": ("土味情话", ["情话", "土味"]), "allow_args": False},
+    "dog": {"aliases": ("舔狗日记", ["dog", "舔狗"]), "allow_args": False},
+    "renjian": {"aliases": ("人间凑数", []), "allow_args": False},
+    "weibo_hot": {"aliases": ("微博热搜", ["微博"]), "allow_args": False},
+    "aiqinggongyu": {"aliases": ("爱情公寓", []), "allow_args": False},
+    "baisi": {"aliases": ("随机白丝", ["白丝"]), "allow_args": False},
+    "cp": {"aliases": ("cp", ["宇宙cp"]), "allow_args": True},
+    "shenhuifu": {"aliases": ("神回复", ["神评"]), "allow_args": False},
 }
 
 def register_handlers():
     # 注册命令处理器
-    for cmd, (main_alias, other_aliases) in COMMANDS.items():
+    for cmd, info in COMMANDS.items():
+        main_alias, other_aliases = info["aliases"]
         matcher = on_command(main_alias, aliases=set(other_aliases), priority=5)
         matcher.handle()(handle_command(cmd))
 
@@ -53,7 +55,8 @@ async def handle_enable(matcher: Matcher, event: GroupMessageEvent, args: Messag
     function = args.extract_plain_text().strip()
     group_id = str(event.group_id)
 
-    for cmd, (main_alias, other_aliases) in COMMANDS.items():
+    for cmd, info in COMMANDS.items():
+        main_alias, other_aliases = info["aliases"]
         if function == main_alias or function in other_aliases:
             utils.enable_function(group_id, cmd)
             await matcher.finish(f"{main_alias}已启用。")
@@ -65,7 +68,8 @@ async def handle_disable(matcher: Matcher, event: GroupMessageEvent, args: Messa
     function = args.extract_plain_text().strip()
     group_id = str(event.group_id)
 
-    for cmd, (main_alias, other_aliases) in COMMANDS.items():
+    for cmd, info in COMMANDS.items():
+        main_alias, other_aliases = info["aliases"]
         if function == main_alias or function in other_aliases:
             utils.disable_function(group_id, cmd)
             await matcher.finish(f"{main_alias}已禁用。")
@@ -76,7 +80,8 @@ async def handle_status(matcher: Matcher, event: GroupMessageEvent):
     """获取当前群组功能状态"""
     group_id = str(event.group_id)
     status_messages = []
-    for cmd, (main_alias, _) in COMMANDS.items():
+    for cmd, info in COMMANDS.items():
+        main_alias, _ = info["aliases"]
         status = "已启用" if utils.is_function_enabled(group_id, cmd) else "已禁用"
         status_messages.append(f"{main_alias}: {status}")
     
