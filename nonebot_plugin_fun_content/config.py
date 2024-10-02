@@ -15,6 +15,7 @@ class Config(BaseModel):
             "twq": "https://jkapi.com/api/tuweiqinghua?type=json",
             "dog": [
                 "https://v2.api-m.com/api/dog",
+                "https://api.52vmy.cn/api/wl/yan/tiangou",
                 "https://api.xiaole.work/api/dog/dog.php?format=json"
             ],
             "wangyiyun": "https://v.api.aa1.cn/api/api-wenan-wangyiyunreping/index.php?aa1=json",

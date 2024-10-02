@@ -216,7 +216,10 @@ class API:
     def _process_dog(self, data: Dict[str, Any]) -> str:
         if isinstance(data, dict):
             if "code" in data and data["code"] in [200, "200"]:
-                return data.get("data", "没有获取到舔狗日记")
+                if "data" in data:
+                    return data.get("data", "没有获取到舔狗日记")
+                elif "content" in data:
+                    return data.get("content", "没有获取到舔狗日记")
         return "没有获取到舔狗日记"
     
     def _process_wangyiyun(self, data: List[Dict[str, Any]]) -> str:
