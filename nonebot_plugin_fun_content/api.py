@@ -16,12 +16,14 @@ class API:
             "hitokoto": self._process_hitokoto_multiple,
             "twq": self._process_twq,
             "dog": self._process_dog,
+            "wangyiyun": self._process_wangyiyun, 
             "renjian": self._process_renjian,
             "weibo_hot": self._process_weibo_hot,
             "aiqinggongyu": self._process_aiqinggongyu,
             "shenhuifu": self._process_shenhuifu,
             "joke": self._process_joke,
             "beauty_pic": self._process_beauty_pic,
+            "douyin_hot": self._process_douyin_hot,
         }
         self._setup_hitokoto_handlers()
 
@@ -147,7 +149,9 @@ class API:
                 response.raise_for_status()
                 data = response.json()
                 logger.info(f"Received beauty pic response: {data}")
-                return self._process_beauty_pic(data)
+                result = self._process_beauty_pic(data)
+                if result:
+                    return result
             except httpx.HTTPStatusError as e:
                 logger.error(f"HTTP error occurred in beauty pic API: {e}")
             except httpx.RequestError as e:
@@ -182,6 +186,11 @@ class API:
 
     def _process_dog(self, data: Dict[str, Any]) -> str:
         return data.get("data", "没有获取到舔狗日记")
+    
+    def _process_wangyiyun(self, data: List[Dict[str, Any]]) -> str:
+        if data and isinstance(data, list) and len(data) > 0:
+            return data[0].get("wangyiyunreping", "没有获取到网易云热评")
+        return "没有获取到网易云热评"
 
     def _process_renjian(self, data: Dict[str, Any]) -> str:
         return data.get("data", "没有获取到人间凑数内容")
@@ -211,9 +220,26 @@ class API:
         return "没有获取到笑话内容"
 
     def _process_beauty_pic(self, data: Dict[str, Any]) -> str:
-        if data.get("code") == 200:
-            return data.get("data", "")
+        if 'code' in data:
+            if data['code'] == 200 or data['code'] == '10000':
+                if 'data' in data:
+                    if isinstance(data['data'], str):
+                        return data['data']
+                    elif isinstance(data['data'], list) and len(data['data']) > 0:
+                        return data['data'][0]
+                elif 'url' in data:
+                    return data['url']
         return ""
+
+    def _process_douyin_hot(self, data: Dict[str, Any]) -> str:
+        if data.get("success"):
+            hot_data = data.get("data", [])
+            if hot_data:
+                return "当前抖音热搜：\n" + "\n".join(
+                    f"{item['index']}. {item['title']} ({item['hot']})"
+                    for item in hot_data[:10]
+                )
+        return "没有获取到抖音热搜内容喵~"
 
 # 实例化 API 类
 api = API()
