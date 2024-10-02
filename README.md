@@ -88,7 +88,7 @@ DISABLED_FUNCTIONS_FILE="C:/Users/YourUsername/Documents/bot/data/disabled_funct
 | 微博热搜/微博 | 所有人 | 否 | 群聊 | 获取当前微博热搜内容 |
 |抖音热搜/抖音|所有人|否|群聊|获取当前抖音热搜内容|
 | 爱情公寓 | 所有人 | 否 | 群聊 | 获取爱情公寓语录 |
-| 随机白丝/白丝 | 所有人 | 否 | 群聊 | 获取随机白丝内容 |
+| 随机美女/美女 | 所有人 | 否 | 群聊 | 获取随机白丝内容 |
 | 宇宙cp/cp 角色1 角色2 | 所有人 | 否 | 群聊 | 获取宇宙CP文 |
 | 神回复/神评 | 所有人 | 否 | 群聊 | 获取神回复内容 |
 |讲个笑话/笑话|所有人|否|群聊|获取一个笑话内容|
@@ -103,7 +103,6 @@ DISABLED_FUNCTIONS_FILE="C:/Users/YourUsername/Documents/bot/data/disabled_funct
 ## 将来可能支持的功能
 - [x] 增加CD限制
 - [x] 增加指令开关
-- [ ] 增加图片发送
 - [ ] 加入定时计划
 - [x] 整合更多的API
 - [ ] 优化屎山代码
