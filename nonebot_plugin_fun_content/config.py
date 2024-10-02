@@ -1,25 +1,30 @@
 from pydantic import BaseModel, HttpUrl, Field
-from typing import Dict
+from typing import Dict, List, Union 
 from pathlib import Path
 from nonebot import get_driver
 
 class Config(BaseModel):
-    fun_content_api_urls: Dict[str, HttpUrl] = Field(
+    fun_content_api_urls: Dict[str, Union[HttpUrl, List[HttpUrl]]] = Field(
         default={
-            "hitokoto": "https://v2.api-m.com/api/yiyan?type=hitokoto",
+            "hitokoto": [
+                "https://v2.api-m.com/api/yiyan?type=hitokoto",
+                "https://uapis.cn/api/say",
+                "https://tenapi.cn/v2/yiyan",
+                "https://api.vvhan.com/api/ian/rand?type=json"
+            ],
             "twq": "https://jkapi.com/api/tuweiqinghua?type=json",
             "dog": "https://v2.api-m.com/api/dog",
             "renjian": "https://v2.api-m.com/api/renjian",
             "weibo_hot": "https://v2.api-m.com/api/weibohot",
             "aiqinggongyu": "https://v2.api-m.com/api/aiqinggongyu",
             "beauty_pic": [
-            "https://v2.api-m.com/api/baisi",
-            "https://v2.api-m.com/api/meinvpic",
-            "https://v2.api-m.com/api/heisi"
-        ],
+                "https://v2.api-m.com/api/baisi",
+                "https://v2.api-m.com/api/meinvpic",
+                "https://v2.api-m.com/api/heisi"
+            ],
             "cp": "https://www.hhlqilongzhu.cn/api/tu_lofter_cp.php",
             "shenhuifu": "https://v.api.aa1.cn/api/api-wenan-shenhuifu/index.php?aa1=json",
-             "joke": "https://api.vvhan.com/api/text/joke?type=json"
+            "joke": "https://api.vvhan.com/api/text/joke?type=json"
         },
         env="FUN_CONTENT_API_URLS"
     )
@@ -32,7 +37,7 @@ class Config(BaseModel):
             "renjian": 20,
             "weibo_hot": 20,
             "aiqinggongyu": 20,
-            "beauty_pic": 20, 
+            "beauty_pic": 20,
             "cp": 20,
             "shenhuifu": 20,
             "joke": 20

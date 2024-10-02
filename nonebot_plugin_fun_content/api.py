@@ -1,9 +1,9 @@
 import httpx
-from typing import Dict, Any, List, Union
+from typing import Dict, Any, List, Union, Callable
 from .config import plugin_config
 import logging
-import asyncio
 import random
+from functools import wraps
 
 # 设置日志记录
 logger = logging.getLogger(__name__)
@@ -11,8 +11,9 @@ logger = logging.getLogger(__name__)
 class API:
     def __init__(self):
         self.client = httpx.AsyncClient(timeout=10.0)
+        self.hitokoto_handlers = []
         self.process_functions = {
-            "hitokoto": self._process_hitokoto,
+            "hitokoto": self._process_hitokoto_multiple,
             "twq": self._process_twq,
             "dog": self._process_dog,
             "renjian": self._process_renjian,
@@ -22,8 +23,49 @@ class API:
             "joke": self._process_joke,
             "beauty_pic": self._process_beauty_pic,
         }
+        self._setup_hitokoto_handlers()
+
+    @staticmethod
+    def hitokoto_handler(url):
+        def decorator(func):
+            @wraps(func)
+            async def wrapper(self):
+                try:
+                    logger.info(f"Sending hitokoto request to {url}")
+                    response = await self.client.get(url)
+                    response.raise_for_status()
+                    
+                    if response.headers.get('content-type', '').startswith('application/json'):
+                        data = response.json()
+                    else:
+                        data = response.text
+                    
+                    logger.info(f"Received hitokoto response from {url}")
+                    return func(data)
+                except httpx.HTTPStatusError as e:
+                    logger.error(f"HTTP error occurred in hitokoto API: {e}")
+                except httpx.RequestError as e:
+                    logger.error(f"Request error occurred in hitokoto API: {e}")
+                except Exception as e:
+                    logger.error(f"Unexpected error in hitokoto API: {e}")
+                return None
+            return wrapper
+        return decorator
+
+    def _setup_hitokoto_handlers(self):
+        self.hitokoto_handlers = [
+            self.hitokoto_handler("https://v2.api-m.com/api/yiyan?type=hitokoto")(self._process_hitokoto_original),
+            self.hitokoto_handler("https://uapis.cn/api/say")(self._process_hitokoto_text),
+            self.hitokoto_handler("https://tenapi.cn/v2/yiyan")(self._process_hitokoto_text),
+            self.hitokoto_handler("https://api.vvhan.com/api/ian/rand?type=json")(self._process_hitokoto_vvhan)
+        ]
 
     async def get_content(self, endpoint: str) -> str:
+        if endpoint == "hitokoto":
+            return await self._get_hitokoto_content()
+        elif endpoint == "beauty_pic":
+            return await self.get_beauty_pic()
+        
         url = plugin_config.fun_content_api_urls.get(endpoint)
         if not url:
             logger.error(f"Unknown API endpoint: {endpoint}")
@@ -56,6 +98,16 @@ class API:
             logger.error(f"No process function for endpoint: {endpoint}")
             raise ValueError(f"未知的 API 端点: {endpoint}")
 
+    async def _get_hitokoto_content(self) -> str:
+        random.shuffle(self.hitokoto_handlers)
+        
+        for handler in self.hitokoto_handlers:
+            result = await handler(self)
+            if result:
+                return result
+        
+        raise ValueError("所有一言 API 请求失败")
+
     async def get_cp_content(self, args: str) -> bytes:
         names = args.split()
         if len(names) < 2:
@@ -86,7 +138,7 @@ class API:
             logger.error("Beauty pic API URLs not found in configuration")
             raise ValueError("Beauty pic API 配置错误")
 
-        random.shuffle(urls)  # 随机打乱 URL 顺序
+        random.shuffle(urls)
         
         for url in urls:
             try:
@@ -108,8 +160,22 @@ class API:
     async def close(self):
         await self.client.aclose()
 
-    def _process_hitokoto(self, data: Dict[str, Any]) -> str:
+    def _process_hitokoto_multiple(self, data: Union[Dict[str, Any], str]) -> str:
+        return "没有获取到一言内容"
+
+    @staticmethod
+    def _process_hitokoto_original(data: Dict[str, Any]) -> str:
         return data.get("data", "没有获取到一言内容")
+
+    @staticmethod
+    def _process_hitokoto_text(data: str) -> str:
+        return data.strip() if data else "没有获取到一言内容"
+
+    @staticmethod
+    def _process_hitokoto_vvhan(data: Dict[str, Any]) -> str:
+        if data.get("success"):
+            return data.get("data", {}).get("content", "没有获取到一言内容")
+        return "没有获取到一言内容"
 
     def _process_twq(self, data: Dict[str, Any]) -> str:
         return data.get("content", "没有获取到土味情话")
