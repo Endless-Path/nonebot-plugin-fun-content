@@ -13,7 +13,10 @@ class Config(BaseModel):
                 "https://api.vvhan.com/api/ian/rand?type=json"
             ],
             "twq": "https://jkapi.com/api/tuweiqinghua?type=json",
-            "dog": "https://v2.api-m.com/api/dog",
+            "dog": [
+                "https://v2.api-m.com/api/dog",
+                "https://api.xiaole.work/api/dog/dog.php?format=json"
+            ],
             "wangyiyun": "https://v.api.aa1.cn/api/api-wenan-wangyiyunreping/index.php?aa1=json",
             "renjian": "https://v2.api-m.com/api/renjian",
             "weibo_hot": "https://v2.api-m.com/api/weibohot",
