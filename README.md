@@ -101,8 +101,8 @@ DISABLED_FUNCTIONS_FILE="C:/Users/YourUsername/Documents/bot/data/disabled_funct
 - [x] 增加指令开关
 - [ ] 增加图片发送
 - [ ] 加入定时计划
-- [ ] API调用优化
-- [ ] 整合更多的API
+- [x] 整合更多的API
+- [ ] 优化屎山代码
 - [ ] ......
 
 ## 💡鸣谢
