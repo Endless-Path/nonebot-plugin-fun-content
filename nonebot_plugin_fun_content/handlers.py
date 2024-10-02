@@ -26,6 +26,7 @@ COMMANDS: Dict[str, Dict[str, Union[Tuple[str, List[str]], bool]]] = {
     "baisi": {"aliases": ("随机白丝", ["白丝"]), "allow_args": False},
     "cp": {"aliases": ("cp", ["宇宙cp"]), "allow_args": True},
     "shenhuifu": {"aliases": ("神回复", ["神评"]), "allow_args": False},
+    "joke": {"aliases": ("讲个笑话", ["笑话"]), "allow_args": False},
 }
 
 def register_handlers():

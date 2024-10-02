@@ -17,7 +17,8 @@ class API:
             "renjian": self._process_renjian,
             "weibo_hot": self._process_weibo_hot,
             "aiqinggongyu": self._process_aiqinggongyu,
-            "shenhuifu": self._process_shenhuifu
+            "shenhuifu": self._process_shenhuifu,
+            "joke": self._process_joke
         }
 
     async def get_content(self, endpoint: str) -> str:
@@ -138,6 +139,12 @@ class API:
         if data and isinstance(data, list) and len(data) > 0:
             return data[0].get("shenhuifu", "没有获取到神回复内容").replace("<br>", "\n")
         return "没有获取到神回复内容"
+    
+    def _process_joke(self, data: Dict[str, Any]) -> str:
+        if data.get("success"):
+            joke_data = data.get("data", {})
+            return joke_data.get("content", "没有获取到笑话内容")
+        return "没有获取到笑话内容"
 
 # 实例化 API 类
 api = API()
