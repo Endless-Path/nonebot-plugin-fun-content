@@ -55,11 +55,13 @@ FUN_CONTENT_COOLDOWNS='
 {
 	"hitokoto": 10, 
 	"twq": 20,  
-	"dog": 20,  
+	"dog": 20, 
+	"wangyiyun": 20, 
 	"renjian": 20,
 	"weibo_hot": 20, 
+	"douyin_hot": 20,
 	"aiqinggongyu": 20, 
-	"baisi": 20, 
+	"beauty_pic": 20, 
 	"cp": 20, 
 	"shenhuifu": 20,
 	"joke": 20
