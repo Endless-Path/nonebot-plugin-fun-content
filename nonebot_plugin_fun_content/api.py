@@ -67,6 +67,8 @@ class API:
             return await self._get_hitokoto_content()
         elif endpoint == "beauty_pic":
             return await self.get_beauty_pic()
+        elif endpoint == "dog":
+            return await self._get_dog_content()
         
         url = plugin_config.fun_content_api_urls.get(endpoint)
         if not url:
@@ -109,6 +111,33 @@ class API:
                 return result
         
         raise ValueError("所有一言 API 请求失败")
+
+    async def _get_dog_content(self) -> str:
+        urls = plugin_config.fun_content_api_urls.get("dog")
+        if not urls:
+            logger.error("Dog API URLs not found in configuration")
+            raise ValueError("Dog API 配置错误")
+
+        random.shuffle(urls)
+        
+        for url in urls:
+            try:
+                logger.info(f"Sending dog diary request to {url}")
+                response = await self.client.get(url)
+                response.raise_for_status()
+                data = response.json()
+                logger.info(f"Received dog diary response: {data}")
+                result = self._process_dog(data)
+                if result:
+                    return result
+            except httpx.HTTPStatusError as e:
+                logger.error(f"HTTP error occurred in dog API: {e}")
+            except httpx.RequestError as e:
+                logger.error(f"Request error occurred in dog API: {e}")
+            except ValueError as e:
+                logger.error(f"JSON decoding failed in dog API: {e}")
+        
+        raise ValueError("所有舔狗日记 API 请求失败")
 
     async def get_cp_content(self, args: str) -> bytes:
         names = args.split()
@@ -185,7 +214,10 @@ class API:
         return data.get("content", "没有获取到土味情话")
 
     def _process_dog(self, data: Dict[str, Any]) -> str:
-        return data.get("data", "没有获取到舔狗日记")
+        if isinstance(data, dict):
+            if "code" in data and data["code"] in [200, "200"]:
+                return data.get("data", "没有获取到舔狗日记")
+        return "没有获取到舔狗日记"
     
     def _process_wangyiyun(self, data: List[Dict[str, Any]]) -> str:
         if data and isinstance(data, list) and len(data) > 0:
