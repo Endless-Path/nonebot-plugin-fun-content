@@ -14,13 +14,17 @@ class Config(BaseModel):
             ],
             "twq": "https://jkapi.com/api/tuweiqinghua?type=json",
             "dog": "https://v2.api-m.com/api/dog",
+            "wangyiyun": "https://v.api.aa1.cn/api/api-wenan-wangyiyunreping/index.php?aa1=json",
             "renjian": "https://v2.api-m.com/api/renjian",
             "weibo_hot": "https://v2.api-m.com/api/weibohot",
+            "douyin_hot": "https://api.vvhan.com/api/hotlist/douyinHot",
             "aiqinggongyu": "https://v2.api-m.com/api/aiqinggongyu",
             "beauty_pic": [
                 "https://v2.api-m.com/api/baisi",
                 "https://v2.api-m.com/api/meinvpic",
-                "https://v2.api-m.com/api/heisi"
+                "https://v2.api-m.com/api/heisi",
+                "https://api.52vmy.cn/api/img/tu/girl",
+                "https://api.unmz.net/free/api/images/girl/getRandomGirlUrl?size=1"
             ],
             "cp": "https://www.hhlqilongzhu.cn/api/tu_lofter_cp.php",
             "shenhuifu": "https://v.api.aa1.cn/api/api-wenan-shenhuifu/index.php?aa1=json",
