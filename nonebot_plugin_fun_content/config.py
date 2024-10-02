@@ -12,7 +12,11 @@ class Config(BaseModel):
             "renjian": "https://v2.api-m.com/api/renjian",
             "weibo_hot": "https://v2.api-m.com/api/weibohot",
             "aiqinggongyu": "https://v2.api-m.com/api/aiqinggongyu",
-            "baisi": "https://v2.api-m.com/api/baisi",
+            "beauty_pic": [
+            "https://v2.api-m.com/api/baisi",
+            "https://v2.api-m.com/api/meinvpic",
+            "https://v2.api-m.com/api/heisi"
+        ],
             "cp": "https://www.hhlqilongzhu.cn/api/tu_lofter_cp.php",
             "shenhuifu": "https://v.api.aa1.cn/api/api-wenan-shenhuifu/index.php?aa1=json",
              "joke": "https://api.vvhan.com/api/text/joke?type=json"
@@ -28,7 +32,7 @@ class Config(BaseModel):
             "renjian": 20,
             "weibo_hot": 20,
             "aiqinggongyu": 20,
-            "baisi": 20,
+            "beauty_pic": 20, 
             "cp": 20,
             "shenhuifu": 20,
             "joke": 20

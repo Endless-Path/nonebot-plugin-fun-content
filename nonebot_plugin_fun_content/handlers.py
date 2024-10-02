@@ -23,7 +23,7 @@ COMMANDS: Dict[str, Dict[str, Union[Tuple[str, List[str]], bool]]] = {
     "renjian": {"aliases": ("人间凑数", []), "allow_args": False},
     "weibo_hot": {"aliases": ("微博热搜", ["微博"]), "allow_args": False},
     "aiqinggongyu": {"aliases": ("爱情公寓", []), "allow_args": False},
-    "baisi": {"aliases": ("随机白丝", ["白丝"]), "allow_args": False},
+    "beauty_pic": {"aliases": ("随机美女", ["美女"]), "allow_args": False},
     "cp": {"aliases": ("cp", ["宇宙cp"]), "allow_args": True},
     "shenhuifu": {"aliases": ("神回复", ["神评"]), "allow_args": False},
     "joke": {"aliases": ("讲个笑话", ["笑话"]), "allow_args": False},
@@ -122,13 +122,13 @@ def handle_command(command: str):
                 except Exception as e:
                     logger.error(f"Failed to send image for CP command: {e}")
                     await matcher.send("CP 图片生成成功，但发送失败。请稍后再试。")
-            elif command == "baisi":
-                image_url = await api.get_baisi_image()
+            elif command == "beauty_pic":
+                image_url = await api.get_beauty_pic()
                 try:
                     await matcher.send(MessageSegment.image(image_url))
                 except Exception as e:
-                    logger.error(f"Failed to send image for Baisi command: {e}")
-                    await matcher.send(f"白丝图片获取成功，但发送失败。请访问以下链接查看：{image_url}")
+                    logger.error(f"Failed to send image for beauty pic command: {e}")
+                    await matcher.send(f"美女图片获取成功，但发送失败。请访问以下链接查看：{image_url}")
             else:
                 result = await api.get_content(command)
                 await matcher.send(result)

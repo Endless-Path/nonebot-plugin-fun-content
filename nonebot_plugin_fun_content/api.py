@@ -3,6 +3,7 @@ from typing import Dict, Any, List, Union
 from .config import plugin_config
 import logging
 import asyncio
+import random
 
 # 设置日志记录
 logger = logging.getLogger(__name__)
@@ -18,7 +19,8 @@ class API:
             "weibo_hot": self._process_weibo_hot,
             "aiqinggongyu": self._process_aiqinggongyu,
             "shenhuifu": self._process_shenhuifu,
-            "joke": self._process_joke
+            "joke": self._process_joke,
+            "beauty_pic": self._process_beauty_pic,
         }
 
     async def get_content(self, endpoint: str) -> str:
@@ -78,31 +80,30 @@ class API:
             logger.error(f"Request error occurred in CP API: {e}")
             raise ValueError("网络请求错误，请稍后重试")
 
-    async def get_baisi_image(self) -> str:
-        headers = {
-            'User-Agent': 'xiaoxiaoapi/1.0.0 (https://api-m.com)'
-        }
-        url = plugin_config.fun_content_api_urls.get("baisi")
-        if not url:
-            logger.error("Baisi API URL not found in configuration")
-            raise ValueError("Baisi API 配置错误")
+    async def get_beauty_pic(self) -> str:
+        urls = plugin_config.fun_content_api_urls.get("beauty_pic")
+        if not urls:
+            logger.error("Beauty pic API URLs not found in configuration")
+            raise ValueError("Beauty pic API 配置错误")
 
-        try:
-            logger.info(f"Sending Baisi request to {url}")
-            response = await self.client.get(url, headers=headers)
-            response.raise_for_status()
-            data = response.json()
-            logger.info(f"Received Baisi response: {data}")
-            return self._process_baisi(data)
-        except httpx.HTTPStatusError as e:
-            logger.error(f"HTTP error occurred in Baisi API: {e}")
-            raise ValueError(f"Baisi API 请求失败: {e.response.status_code}")
-        except httpx.RequestError as e:
-            logger.error(f"Request error occurred in Baisi API: {e}")
-            raise ValueError("网络请求错误，请稍后重试")
-        except ValueError as e:
-            logger.error(f"JSON decoding failed in Baisi API: {e}")
-            raise ValueError("Baisi API 返回了无效的数据格式")
+        random.shuffle(urls)  # 随机打乱 URL 顺序
+        
+        for url in urls:
+            try:
+                logger.info(f"Sending beauty pic request to {url}")
+                response = await self.client.get(url)
+                response.raise_for_status()
+                data = response.json()
+                logger.info(f"Received beauty pic response: {data}")
+                return self._process_beauty_pic(data)
+            except httpx.HTTPStatusError as e:
+                logger.error(f"HTTP error occurred in beauty pic API: {e}")
+            except httpx.RequestError as e:
+                logger.error(f"Request error occurred in beauty pic API: {e}")
+            except ValueError as e:
+                logger.error(f"JSON decoding failed in beauty pic API: {e}")
+        
+        raise ValueError("所有随机美女 API 请求失败")
 
     async def close(self):
         await self.client.aclose()
@@ -132,19 +133,21 @@ class API:
     def _process_aiqinggongyu(self, data: Dict[str, Any]) -> str:
         return data.get("data", "没有获取到爱情公寓语录")
 
-    def _process_baisi(self, data: Dict[str, Any]) -> str:
-        return data.get("data", "没有获取到图片链接")
-
     def _process_shenhuifu(self, data: List[Dict[str, Any]]) -> str:
         if data and isinstance(data, list) and len(data) > 0:
             return data[0].get("shenhuifu", "没有获取到神回复内容").replace("<br>", "\n")
         return "没有获取到神回复内容"
-    
+
     def _process_joke(self, data: Dict[str, Any]) -> str:
         if data.get("success"):
             joke_data = data.get("data", {})
             return joke_data.get("content", "没有获取到笑话内容")
         return "没有获取到笑话内容"
+
+    def _process_beauty_pic(self, data: Dict[str, Any]) -> str:
+        if data.get("code") == 200:
+            return data.get("data", "")
+        return ""
 
 # 实例化 API 类
 api = API()
