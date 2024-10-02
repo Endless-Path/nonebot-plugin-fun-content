@@ -1,4 +1,3 @@
-import nonebot
 from nonebot import get_driver
 from nonebot.plugin import PluginMetadata
 from .handlers import register_handlers
