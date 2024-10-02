@@ -61,7 +61,8 @@ FUN_CONTENT_COOLDOWNS='
 	"aiqinggongyu": 20, 
 	"baisi": 20, 
 	"cp": 20, 
-	"shenhuifu": 0
+	"shenhuifu": 20,
+	"joke": 20
 }
 '
 #禁用功能文件路径配置（默认在插件目录下，可不配置）
@@ -86,6 +87,7 @@ DISABLED_FUNCTIONS_FILE="C:/Users/YourUsername/Documents/bot/data/disabled_funct
 | 随机白丝/白丝 | 所有人 | 否 | 群聊 | 获取随机白丝内容 |
 | 宇宙cp/cp 角色1 角色2 | 所有人 | 否 | 群聊 | 获取宇宙CP文 |
 | 神回复/神评 | 所有人 | 否 | 群聊 | 获取神回复内容 |
+|讲个笑话/笑话|所有人|否|群聊|获取一个笑话内容|
 
 ## 管理命令（仅限超级用户、群主、管理员）
 |指令|说明|

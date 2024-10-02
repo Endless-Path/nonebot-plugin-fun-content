@@ -14,7 +14,8 @@ class Config(BaseModel):
             "aiqinggongyu": "https://v2.api-m.com/api/aiqinggongyu",
             "baisi": "https://v2.api-m.com/api/baisi",
             "cp": "https://www.hhlqilongzhu.cn/api/tu_lofter_cp.php",
-            "shenhuifu": "https://v.api.aa1.cn/api/api-wenan-shenhuifu/index.php?aa1=json"
+            "shenhuifu": "https://v.api.aa1.cn/api/api-wenan-shenhuifu/index.php?aa1=json",
+             "joke": "https://api.vvhan.com/api/text/joke?type=json"
         },
         env="FUN_CONTENT_API_URLS"
     )
@@ -29,7 +30,8 @@ class Config(BaseModel):
             "aiqinggongyu": 20,
             "baisi": 20,
             "cp": 20,
-            "shenhuifu": 20
+            "shenhuifu": 20,
+            "joke": 20
         },
         env="FUN_CONTENT_COOLDOWNS"
     )
