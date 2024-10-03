@@ -53,7 +53,7 @@ _✨趣味内容插件✨_
 #命令冷却时间配置（单位：秒,默认为20，可不配置）
 FUN_CONTENT_COOLDOWNS='
 {
-	"hitokoto": 10, 
+	"hitokoto": 20, 
 	"twq": 20,  
 	"dog": 20, 
 	"wangyiyun": 20, 
@@ -64,7 +64,8 @@ FUN_CONTENT_COOLDOWNS='
 	"beauty_pic": 20, 
 	"cp": 20, 
 	"shenhuifu": 20,
-	"joke": 20
+	"joke": 20,
+	"lazy_sing": 60
 }
 '
 #禁用功能文件路径配置（默认在插件目录下，可不配置）
@@ -92,6 +93,9 @@ DISABLED_FUNCTIONS_FILE="C:/Users/YourUsername/Documents/bot/data/disabled_funct
 | 宇宙cp/cp 角色1 角色2 | 所有人 | 否 | 群聊 | 获取宇宙CP文 |
 | 神回复/神评 | 所有人 | 否 | 群聊 | 获取神回复内容 |
 |讲个笑话/笑话|所有人|否|群聊|获取一个笑话内容|
+|懒洋洋唱歌/唱歌/懒洋洋|所有人|否|群聊|获取AI懒洋洋唱歌语音|
+>！！！注意懒洋洋唱歌功能需要下载ffmpeg并正确配置到环境变量中
+
 
 ## 管理命令（仅限超级用户、群主、管理员）
 |指令|说明|
