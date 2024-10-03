@@ -11,6 +11,8 @@ import logging
 import httpx
 from io import BytesIO
 from typing import Dict, Tuple, List, Union
+import os
+import asyncio
 
 # 设置日志记录
 logger = logging.getLogger(__name__)
@@ -29,6 +31,7 @@ COMMANDS: Dict[str, Dict[str, Union[Tuple[str, List[str]], bool]]] = {
     "cp": {"aliases": ("cp", ["宇宙cp"]), "allow_args": True},
     "shenhuifu": {"aliases": ("神回复", ["神评"]), "allow_args": False},
     "joke": {"aliases": ("讲个笑话", ["笑话"]), "allow_args": False},
+    "lazy_sing": {"aliases": ("懒洋洋唱歌", ["懒洋洋", "唱歌"]), "allow_args": False},
 }
 
 def register_handlers():
@@ -131,6 +134,18 @@ def handle_command(command: str):
                 except Exception as e:
                     logger.error(f"Failed to send image for beauty pic command: {e}")
                     await matcher.send(f"美女图片获取成功，但发送失败。请访问以下链接查看：{image_url}")
+            elif command == "lazy_sing":
+                await matcher.send("懒洋洋正在准备唱歌，请稍候...")
+                mp3_filename = await api.get_lazy_song()
+                try:
+                    await matcher.send(MessageSegment.record(file=mp3_filename))
+                    await matcher.send("懒洋洋唱完啦！")
+                except Exception as e:
+                    logger.error(f"Failed to send voice message for lazy sing command: {e}")
+                    await matcher.send("懒洋洋唱歌时出了点小问题，请稍后再试。")
+                finally:
+                    if mp3_filename and os.path.exists(mp3_filename):
+                        os.remove(mp3_filename)
             else:
                 result = await api.get_content(command)
                 await matcher.send(result)
@@ -142,8 +157,11 @@ def handle_command(command: str):
         except httpx.HTTPError as e:
             logger.error(f"HTTP error in {command} command: {str(e)}")
             await matcher.send(f"网络请求错误：{str(e)}")
+        except asyncio.TimeoutError:
+            logger.error(f"Timeout error in {command} command")
+            await matcher.send("请求超时，请稍后再试")
         except Exception as e:
             logger.error(f"Unexpected error in {command} command: {str(e)}", exc_info=True)
-            await matcher.send(f"发生未知错误：{str(e)}，请稍后再试")
+            await matcher.send(f"发生未知错误，请稍后再试")
 
     return handler

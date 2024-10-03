@@ -32,7 +32,8 @@ class Config(BaseModel):
             ],
             "cp": "https://www.hhlqilongzhu.cn/api/tu_lofter_cp.php",
             "shenhuifu": "https://v.api.aa1.cn/api/api-wenan-shenhuifu/index.php?aa1=json",
-            "joke": "https://api.vvhan.com/api/text/joke?type=json"
+            "joke": "https://api.vvhan.com/api/text/joke?type=json",
+            "lazy_sing": "https://api.treason.cn/API/nan.php"
         },
         env="FUN_CONTENT_API_URLS"
     )
@@ -48,7 +49,8 @@ class Config(BaseModel):
             "beauty_pic": 20,
             "cp": 20,
             "shenhuifu": 20,
-            "joke": 20
+            "joke": 20,
+            "lazy_sing": 60
         },
         env="FUN_CONTENT_COOLDOWNS"
     )
