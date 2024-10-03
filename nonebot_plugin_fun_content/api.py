@@ -4,13 +4,17 @@ from .config import plugin_config
 import logging
 import random
 from functools import wraps
+import tempfile
+import os
+import asyncio
+from urllib.parse import urlparse
 
 # 设置日志记录
 logger = logging.getLogger(__name__)
 
 class API:
     def __init__(self):
-        self.client = httpx.AsyncClient(timeout=10.0)
+        self.client = httpx.AsyncClient(timeout=10.0, follow_redirects=True)
         self.hitokoto_handlers = []
         self.process_functions = {
             "hitokoto": self._process_hitokoto_multiple,
@@ -275,6 +279,78 @@ class API:
                     for item in hot_data[:10]
                 )
         return "没有获取到抖音热搜内容喵~"
+    
+    async def get_lazy_song(self) -> str:
+        api_url = plugin_config.fun_content_api_urls.get("lazy_sing") 
+        mp4_url = await self._get_mp4_url(api_url)
+        logger.info(f"Extracted MP4 URL: {mp4_url}")
+
+        if not self._is_valid_mp4_url(mp4_url):
+            raise ValueError(f"Invalid MP4 URL: {mp4_url}")
+
+        # 创建临时目录
+        temp_dir = tempfile.mkdtemp()
+        mp4_filename = os.path.join(temp_dir, "temp_video.mp4")
+        mp3_filename = os.path.join(temp_dir, "converted_audio.mp3")
+
+        try:
+            # 下载MP4文件
+            logger.info(f"Downloading MP4 from: {mp4_url}")
+            async with self.client.stream("GET", mp4_url) as response:
+                response.raise_for_status()  # 确保请求成功
+                with open(mp4_filename, "wb") as f:
+                    async for chunk in response.aiter_bytes():
+                        f.write(chunk)
+            logger.info(f"MP4 downloaded to: {mp4_filename}")
+
+            # 转换MP4为MP3
+            logger.info("Starting FFmpeg conversion")
+            process = await asyncio.create_subprocess_exec(
+                "ffmpeg", "-i", mp4_filename, "-q:a", "0", "-map", "a", mp3_filename,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await process.communicate()
+            if process.returncode != 0:
+                logger.error(f"FFmpeg conversion failed. Error: {stderr.decode()}")
+                raise Exception("音频转换失败")
+            logger.info(f"MP3 converted to: {mp3_filename}")
+
+            return mp3_filename
+
+        except Exception as e:
+            logger.error(f"Error in get_lazy_song: {e}")
+            raise
+        finally:
+            # 清理MP4文件
+            if os.path.exists(mp4_filename):
+                os.remove(mp4_filename)
+
+    async def _get_mp4_url(self, api_url: str) -> str:
+        try:
+            response = await self.client.get(api_url)
+            response.raise_for_status()
+            content = response.text.strip()
+            logger.info(f"API Response: {content}")
+            
+            if content.startswith('http'):
+                return content
+            else:
+                raise ValueError(f"No valid URL found in API response: {content}")
+        except httpx.RequestError as e:
+            logger.error(f"Request error occurred: {e}")
+            raise ValueError("网络请求错误，请稍后重试")
+        except httpx.HTTPStatusError as e:
+            logger.error(f"HTTP error occurred: {e}")
+            raise ValueError(f"API 请求失败: {e.response.status_code}")
+
+    def _is_valid_mp4_url(self, url: str) -> bool:
+        parsed_url = urlparse(url)
+        path = parsed_url.path.lower()
+        return path.endswith('.mp4') or 'mp4' in parsed_url.query
+
+    async def close(self):
+        await self.client.aclose()
 
 # 实例化 API 类
 api = API()
