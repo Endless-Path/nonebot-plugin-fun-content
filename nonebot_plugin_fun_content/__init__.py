@@ -28,7 +28,7 @@ __plugin_meta__ = PluginMetadata(
     - 功能状态: 查看当前群组的功能禁用状态
     """,
     type="application",
-    homepage="https://github.com/chsiyu/nonebot-plugin-fun-content",
+    homepage="https://github.com/Endless-Path/nonebot-plugin-fun-content",
     supported_adapters={"~onebot.v11"},
 )
 
