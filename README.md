@@ -107,7 +107,6 @@ DISABLED_FUNCTIONS_FILE="C:/Users/YourUsername/Documents/bot/data/disabled_funct
 ## 将来可能支持的功能
 - [x] 增加CD限制
 - [x] 增加指令开关
-- [ ] 优化懒洋洋唱歌功
 - [ ] 加入定时计划
 - [x] 整合更多的API
 - [ ] 优化屎山代码
