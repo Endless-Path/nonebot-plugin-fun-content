@@ -13,6 +13,7 @@ from io import BytesIO
 from typing import Dict, Tuple, List, Union
 import os
 import asyncio
+from pathlib import Path
 
 # 设置日志记录
 logger = logging.getLogger(__name__)
@@ -136,16 +137,18 @@ def handle_command(command: str):
                     await matcher.send(f"美女图片获取成功，但发送失败。请访问以下链接查看：{image_url}")
             elif command == "lazy_sing":
                 await matcher.send("懒洋洋正在准备唱歌，请稍候...")
-                mp3_filename = await api.get_lazy_song()
                 try:
-                    await matcher.send(MessageSegment.record(file=mp3_filename))
+                    mp3_file = await api.get_lazy_song()  # 现在直接得到 Path 对象
+                    await matcher.send(MessageSegment.record(file=str(mp3_file)))
                     await matcher.send("懒洋洋唱完啦！")
                 except Exception as e:
                     logger.error(f"Failed to send voice message for lazy sing command: {e}")
                     await matcher.send("懒洋洋唱歌时出了点小问题，请稍后再试。")
                 finally:
-                    if mp3_filename and os.path.exists(mp3_filename):
-                        os.remove(mp3_filename)
+                    if mp3_file.exists():
+                        mp3_file.unlink()
+                    if mp3_file.parent.exists():
+                        mp3_file.parent.rmdir()  # 删除临时目录
             else:
                 result = await api.get_content(command)
                 await matcher.send(result)
