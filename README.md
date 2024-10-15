@@ -170,7 +170,9 @@ PERSISTENT_DATA_FILE="C:/Users/YourUsername/Documents/bot/data/persistent_data.j
 - [x] 增加CD限制
 - [x] 增加指令开关
 - [x] 加入定时计划
-- [x] 整合更多的API
+- [ ] 优化发送文字排版
+- [ ] 解决已知的一些问题（~~下次一定~~）
+- [ ] 解决api请求失败（加入更多api or 使用数据库）
 - [ ] 优化屎山代码
 - [ ] ......
 
