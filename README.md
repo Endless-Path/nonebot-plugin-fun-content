@@ -81,7 +81,7 @@ PERSISTENT_DATA_FILE="C:/Users/YourUsername/Documents/bot/data/persistent_data.j
 ```json
 {
   "开关": {
-    "332456494": {
+    "3324569": {
       "hitokoto": true,
       "twq": true,
       "dog": true,
@@ -96,7 +96,7 @@ PERSISTENT_DATA_FILE="C:/Users/YourUsername/Documents/bot/data/persistent_data.j
       "joke": true,
       "lazy_sing": true
     },
-    "764444949": {
+    "7644494": {
       "hitokoto": true,
       "twq": true,
       "dog": true,
