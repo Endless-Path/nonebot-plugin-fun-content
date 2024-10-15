@@ -43,8 +43,10 @@ class Config(BaseModel):
             "hitokoto": 20,
             "twq": 20,
             "dog": 20,
+            "wangyiyun": 20,
             "renjian": 20,
             "weibo_hot": 20,
+            "douyin_hot": 20,
             "aiqinggongyu": 20,
             "beauty_pic": 20,
             "cp": 20,
@@ -55,11 +57,15 @@ class Config(BaseModel):
         env="FUN_CONTENT_COOLDOWNS"
     )
 
-    # 新增配置项：禁用功能文件路径
-    disabled_functions_file: Path = Field(
-        default=Path(__file__).parent / "disabled_functions.json",
-        env="DISABLED_FUNCTIONS_FILE"
+    persistent_data_file: Path = Field(
+        default=Path(__file__).parent / "persistent_data.json",
+        env="PERSISTENT_DATA_FILE"
     )
+
+    COMMANDS: List[str] = [
+        "hitokoto", "twq", "dog", "wangyiyun", "renjian", "weibo_hot", "douyin_hot",
+        "aiqinggongyu", "beauty_pic", "cp", "shenhuifu", "joke", "lazy_sing"
+    ]
 
 driver = get_driver()
 global_config = driver.config
