@@ -2,6 +2,8 @@ from nonebot import get_driver
 from nonebot.plugin import PluginMetadata
 from .handlers import register_handlers
 from .config import plugin_config
+from .scheduler import scheduler_instance
+from .utils import utils
 import logging
 
 __plugin_meta__ = PluginMetadata(
@@ -20,12 +22,15 @@ __plugin_meta__ = PluginMetadata(
     - 宇宙CP文: 发送 "cp 角色1 角色2" 获取宇宙CP文。
     - 神回复: 发送 "神回复" 或 "神评" 获取神回复内容。
     - 讲个笑话: 发送 "讲个笑话" 或 "笑话" 获取一个笑话。
-     - 懒洋洋唱歌: 发送 "懒洋洋唱歌"、"懒洋洋" 或 "唱歌" 获取一段随机歌曲。
+    - 懒洋洋唱歌: 发送 "懒洋洋唱歌"、"懒洋洋" 或 "唱歌" 获取一段随机歌曲。
 
     管理命令（仅限超级用户、群主、管理员）：
     - 关闭 [功能名]: 在当前群禁用指定功能
     - 开启 [功能名]: 在当前群启用指定功能
     - 功能状态: 查看当前群组的功能禁用状态
+    - [功能名]设置 [时间]: 设置定时任务，如 "一言设置 08:00"
+    - 定时任务状态: 查看当前群组的定时任务
+    - 定时任务禁用 [功能名] [时间]: 禁用指定的定时任务
     """,
     type="application",
     homepage="https://github.com/Endless-Path/nonebot-plugin-fun-content",
@@ -42,21 +47,43 @@ logger.addHandler(handler)
 # 获取驱动以访问全局配置
 driver = get_driver()
 
+initialization_completed = False
+
 @driver.on_startup
 async def plugin_init():
     logger.info("趣味内容插件正在初始化...")
-    # 这里可以添加任何需要在插件启动时执行的代码
-    # 例如，检查配置是否正确加载
-    if not plugin_config.fun_content_api_urls:
-        logger.warning("API URL 配置为空，请检查配置文件")
+    
+    # 初始化定时任务
+    for group_id, group_tasks in utils.persistent_data["定时"].items():
+        for command, times in group_tasks.items():
+            for time in times:
+                try:
+                    scheduler_instance.add_job(group_id, command, time)
+                except Exception as e:
+                    logger.error(f"Error adding job for group {group_id}, command {command}, time {time}: {str(e)}")
+    
     logger.info("趣味内容插件初始化完成")
 
 @driver.on_shutdown
 async def plugin_shutdown():
     logger.info("趣味内容插件正在关闭...")
-    # 这里可以添加任何需要在插件关闭时执行的清理代码
+    
+    # 更新定时任务数据
+    utils.persistent_data["定时"] = {
+        group_id: {
+            command: times for command, times in group_tasks.items() if times
+        } for group_id, group_tasks in scheduler_instance.jobs.items()
+    }
+    
+    # 移除空的群组数据
+    utils.persistent_data["定时"] = {
+        group_id: group_tasks for group_id, group_tasks in utils.persistent_data["定时"].items() if group_tasks
+    }
+    
+    utils._save_persistent_data()
+    
     logger.info("趣味内容插件已关闭")
-
+    
 # 注册处理程序
 register_handlers()
 

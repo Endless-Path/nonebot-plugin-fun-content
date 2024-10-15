@@ -7,13 +7,12 @@ from nonebot.adapters.onebot.v11.permission import GROUP_ADMIN, GROUP_OWNER
 from .utils import utils
 from .api import api
 from .config import plugin_config
+from .scheduler import scheduler_instance as scheduler
 import logging
 import httpx
 from io import BytesIO
 from typing import Dict, Tuple, List, Union
-import os
 import asyncio
-from pathlib import Path
 
 # 设置日志记录
 logger = logging.getLogger(__name__)
@@ -56,6 +55,21 @@ def register_handlers():
     enable_cmd.handle()(handle_enable)
     disable_cmd.handle()(handle_disable)
     status_cmd.handle()(handle_status)
+
+    # 注册定时任务相关命令
+    set_schedule_cmd = on_command("设置", 
+                                  permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
+                                  priority=1, block=True)
+    schedule_status_cmd = on_command("定时任务状态", 
+                                     permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
+                                     priority=1, block=True)
+    disable_schedule_cmd = on_command("定时任务禁用", 
+                                      permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
+                                      priority=1, block=True)
+
+    set_schedule_cmd.handle()(handle_set_schedule)
+    schedule_status_cmd.handle()(handle_schedule_status)
+    disable_schedule_cmd.handle()(handle_disable_schedule)
 
 async def handle_enable(matcher: Matcher, event: GroupMessageEvent, args: Message = CommandArg()):
     """处理启用功能的命令"""
@@ -168,3 +182,52 @@ def handle_command(command: str):
             await matcher.send(f"发生未知错误，请稍后再试")
 
     return handler
+
+async def handle_set_schedule(matcher: Matcher, event: GroupMessageEvent, args: Message = CommandArg()):
+    group_id = str(event.group_id)
+    command_args = args.extract_plain_text().strip().split()
+    if len(command_args) == 2:
+        function, time = command_args
+        for cmd, info in COMMANDS.items():
+            main_alias, other_aliases = info["aliases"]
+            if function == main_alias or function in other_aliases:
+                if utils.is_valid_time_format(time):
+                    scheduler.add_job(group_id, cmd, time)
+                    await matcher.finish(f"已设置 {main_alias} 在 {time} 定时触发。")
+                else:
+                    await matcher.finish("时间格式错误，请使用 HH:MM 格式。")
+        await matcher.finish(f"未找到名为 '{function}' 的功能。")
+    else:
+        await matcher.finish("参数错误，请使用正确的格式：设置 [功能指令] [时间]")
+
+async def handle_schedule_status(matcher: Matcher, event: GroupMessageEvent):
+    group_id = str(event.group_id)
+    status = scheduler.get_schedule_status(group_id)
+    if status:
+        formatted_status = []
+        for command, times in status.items():
+            main_alias = next((info["aliases"][0] for cmd, info in COMMANDS.items() if cmd == command), command)
+            for time in times:
+                formatted_status.append(f"{main_alias} 在 {time} 触发")
+        await matcher.finish("\n".join(formatted_status))
+    else:
+        await matcher.finish("当前群组没有设置定时任务。")
+
+async def handle_disable_schedule(matcher: Matcher, event: GroupMessageEvent, args: Message = CommandArg()):
+    group_id = str(event.group_id)
+    command_args = args.extract_plain_text().strip().split()
+    if len(command_args) != 2:
+        await matcher.finish("参数错误，请使用正确的格式：定时任务禁用 [功能指令] [时间]")
+    
+    function, time = command_args
+    for cmd, info in COMMANDS.items():
+        main_alias, other_aliases = info["aliases"]
+        if function == main_alias or function in other_aliases:
+            if utils.is_valid_time_format(time):
+                if scheduler.remove_job(group_id, cmd, time):
+                    await matcher.finish(f"已删除 {main_alias} 在 {time} 的定时任务。")
+                else:
+                    await matcher.finish(f"未找到 {main_alias} 在 {time} 的定时任务。")
+            else:
+                await matcher.finish("时间格式错误，请使用 HH:MM 格式。")
+    await matcher.finish(f"未找到名为 '{function}' 的功能。")
