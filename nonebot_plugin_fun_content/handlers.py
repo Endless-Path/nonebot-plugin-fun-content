@@ -35,6 +35,7 @@ COMMANDS: Dict[str, Dict[str, Union[Tuple[str, List[str]], bool]]] = {
 }
 
 def register_handlers():
+    """注册所有的命令处理器"""
     # 注册命令处理器
     for cmd, info in COMMANDS.items():
         main_alias, other_aliases = info["aliases"]
@@ -71,46 +72,32 @@ def register_handlers():
     schedule_status_cmd.handle()(handle_schedule_status)
     disable_schedule_cmd.handle()(handle_disable_schedule)
 
-async def handle_enable(matcher: Matcher, event: GroupMessageEvent, args: Message = CommandArg()):
-    """处理启用功能的命令"""
-    function = args.extract_plain_text().strip()
-    group_id = str(event.group_id)
-
-    for cmd, info in COMMANDS.items():
-        main_alias, other_aliases = info["aliases"]
-        if function == main_alias or function in other_aliases:
-            utils.enable_function(group_id, cmd)
-            await matcher.finish(f"{main_alias}已启用。")
+def is_strict_command_match(command: str, user_input: str) -> bool:
+    """
+    严格匹配指令
     
-    await matcher.finish(f"未找到名为 '{function}' 的功能。")
-
-async def handle_disable(matcher: Matcher, event: GroupMessageEvent, args: Message = CommandArg()):
-    """处理禁用功能的命令"""
-    function = args.extract_plain_text().strip()
-    group_id = str(event.group_id)
-
-    for cmd, info in COMMANDS.items():
-        main_alias, other_aliases = info["aliases"]
-        if function == main_alias or function in other_aliases:
-            utils.disable_function(group_id, cmd)
-            await matcher.finish(f"{main_alias}已禁用。")
-    
-    await matcher.finish(f"未找到名为 '{function}' 的功能。")
-
-async def handle_status(matcher: Matcher, event: GroupMessageEvent):
-    """获取当前群组功能状态"""
-    group_id = str(event.group_id)
-    status_messages = []
-    for cmd, info in COMMANDS.items():
-        main_alias, _ = info["aliases"]
-        status = "已启用" if utils.is_function_enabled(group_id, cmd) else "已禁用"
-        status_messages.append(f"{main_alias}: {status}")
-    
-    await matcher.finish("\n".join(status_messages))
+    :param command: 命令名称
+    :param user_input: 用户输入的完整文本
+    :return: 是否严格匹配
+    """
+    main_alias, other_aliases = COMMANDS[command]["aliases"]
+    all_aliases = [main_alias] + other_aliases
+    return any(user_input.strip().lower() == alias.lower() for alias in all_aliases)
 
 def handle_command(command: str):
-    """返回命令处理函数"""
+    """
+    返回命令处理函数
+    
+    :param command: 命令名称
+    :return: 异步处理函数
+    """
     async def handler(matcher: Matcher, event: MessageEvent, args: Message = CommandArg()):
+        user_input = event.get_plaintext().strip()
+        
+        # 严格匹配指令
+        if not is_strict_command_match(command, user_input):
+            await matcher.finish()
+        
         # 检查是否为群消息事件
         if isinstance(event, GroupMessageEvent):
             group_id = str(event.group_id)
@@ -183,7 +170,45 @@ def handle_command(command: str):
 
     return handler
 
+async def handle_enable(matcher: Matcher, event: GroupMessageEvent, args: Message = CommandArg()):
+    """处理启用功能的命令"""
+    function = args.extract_plain_text().strip()
+    group_id = str(event.group_id)
+
+    for cmd, info in COMMANDS.items():
+        main_alias, other_aliases = info["aliases"]
+        if function == main_alias or function in other_aliases:
+            utils.enable_function(group_id, cmd)
+            await matcher.finish(f"{main_alias}已启用。")
+    
+    await matcher.finish(f"未找到名为 '{function}' 的功能。")
+
+async def handle_disable(matcher: Matcher, event: GroupMessageEvent, args: Message = CommandArg()):
+    """处理禁用功能的命令"""
+    function = args.extract_plain_text().strip()
+    group_id = str(event.group_id)
+
+    for cmd, info in COMMANDS.items():
+        main_alias, other_aliases = info["aliases"]
+        if function == main_alias or function in other_aliases:
+            utils.disable_function(group_id, cmd)
+            await matcher.finish(f"{main_alias}已禁用。")
+    
+    await matcher.finish(f"未找到名为 '{function}' 的功能。")
+
+async def handle_status(matcher: Matcher, event: GroupMessageEvent):
+    """获取当前群组功能状态"""
+    group_id = str(event.group_id)
+    status_messages = []
+    for cmd, info in COMMANDS.items():
+        main_alias, _ = info["aliases"]
+        status = "已启用" if utils.is_function_enabled(group_id, cmd) else "已禁用"
+        status_messages.append(f"{main_alias}: {status}")
+    
+    await matcher.finish("\n".join(status_messages))
+
 async def handle_set_schedule(matcher: Matcher, event: GroupMessageEvent, args: Message = CommandArg()):
+    """处理设置定时任务的命令"""
     group_id = str(event.group_id)
     command_args = args.extract_plain_text().strip().split()
     if len(command_args) == 2:
@@ -201,6 +226,7 @@ async def handle_set_schedule(matcher: Matcher, event: GroupMessageEvent, args: 
         await matcher.finish("参数错误，请使用正确的格式：设置 [功能指令] [时间]")
 
 async def handle_schedule_status(matcher: Matcher, event: GroupMessageEvent):
+    """获取当前群组的定时任务状态"""
     group_id = str(event.group_id)
     status = scheduler.get_schedule_status(group_id)
     if status:
@@ -214,6 +240,7 @@ async def handle_schedule_status(matcher: Matcher, event: GroupMessageEvent):
         await matcher.finish("当前群组没有设置定时任务。")
 
 async def handle_disable_schedule(matcher: Matcher, event: GroupMessageEvent, args: Message = CommandArg()):
+    """处理禁用定时任务的命令"""
     group_id = str(event.group_id)
     command_args = args.extract_plain_text().strip().split()
     if len(command_args) != 2:
