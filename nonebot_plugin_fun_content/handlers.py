@@ -74,7 +74,7 @@ def register_handlers():
 
 def is_strict_command_match(command: str, user_input: str) -> bool:
     """
-    严格匹配指令
+    严格匹配指令，考虑是否允许参数
     
     :param command: 命令名称
     :param user_input: 用户输入的完整文本
@@ -82,7 +82,12 @@ def is_strict_command_match(command: str, user_input: str) -> bool:
     """
     main_alias, other_aliases = COMMANDS[command]["aliases"]
     all_aliases = [main_alias] + other_aliases
-    return any(user_input.strip().lower() == alias.lower() for alias in all_aliases)
+    allow_args = COMMANDS[command]["allow_args"]
+    
+    if allow_args:
+        return any(user_input.strip().lower().startswith(alias.lower()) for alias in all_aliases)
+    else:
+        return any(user_input.strip().lower() == alias.lower() for alias in all_aliases)
 
 def handle_command(command: str):
     """
@@ -105,8 +110,11 @@ def handle_command(command: str):
                 logger.info(f"Function {command} is disabled in group {group_id}")
                 await matcher.finish(f"该功能在本群已被禁用")
 
+        # 提取命令参数
+        command_args = args.extract_plain_text().strip()
+
         # 检查命令是否允许参数
-        if not COMMANDS[command]["allow_args"] and args.extract_plain_text().strip():
+        if not COMMANDS[command]["allow_args"] and command_args:
             # 如果命令不允许参数但用户提供了参数，直接结束处理而不发送任何消息
             await matcher.finish()
 
@@ -123,7 +131,7 @@ def handle_command(command: str):
         try:
             # 根据命令类型调用相应的 API
             if command == "cp":
-                image_data = await api.get_cp_content(args.extract_plain_text().strip())
+                image_data = await api.get_cp_content(command_args)
                 try:
                     await matcher.send(MessageSegment.image(BytesIO(image_data)))
                 except Exception as e:
