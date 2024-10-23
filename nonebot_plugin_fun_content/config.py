@@ -4,6 +4,13 @@ from pathlib import Path
 from nonebot import get_driver
 
 class Config(BaseModel):
+    # 数据库配置
+    fun_content_db_path: Path = Field(
+        default=Path(__file__).parent / "data/fun_content.db",
+        env="FUN_CONTENT_DB_PATH"
+    )
+
+    # API URLs配置
     fun_content_api_urls: Dict[str, Union[HttpUrl, List[HttpUrl]]] = Field(
         default={
             "hitokoto": [
@@ -18,7 +25,6 @@ class Config(BaseModel):
                 "https://api.52vmy.cn/api/wl/yan/tiangou",
                 "https://api.xiaole.work/api/dog/dog.php?format=json"
             ],
-            "wangyiyun": "https://v.api.aa1.cn/api/api-wenan-wangyiyunreping/index.php?aa1=json",
             "renjian": "https://v2.api-m.com/api/renjian",
             "weibo_hot": "https://v2.api-m.com/api/weibohot",
             "douyin_hot": "https://api.vvhan.com/api/hotlist/douyinHot",
@@ -33,17 +39,16 @@ class Config(BaseModel):
             "cp": "https://www.hhlqilongzhu.cn/api/tu_lofter_cp.php",
             "shenhuifu": "https://v.api.aa1.cn/api/api-wenan-shenhuifu/index.php?aa1=json",
             "joke": "https://api.vvhan.com/api/text/joke?type=json",
-            "lazy_sing": "https://api.treason.cn/API/nan.php"
         },
         env="FUN_CONTENT_API_URLS"
     )
 
+    # 功能冷却时间配置（秒）
     fun_content_cooldowns: Dict[str, int] = Field(
         default={
             "hitokoto": 20,
             "twq": 20,
             "dog": 20,
-            "wangyiyun": 20,
             "renjian": 20,
             "weibo_hot": 20,
             "douyin_hot": 20,
@@ -52,20 +57,30 @@ class Config(BaseModel):
             "cp": 20,
             "shenhuifu": 20,
             "joke": 20,
-            "lazy_sing": 60
         },
         env="FUN_CONTENT_COOLDOWNS"
     )
 
+    # 持久化数据存储路径
     persistent_data_file: Path = Field(
         default=Path(__file__).parent / "persistent_data.json",
         env="PERSISTENT_DATA_FILE"
     )
 
+    # 可用命令列表
     COMMANDS: List[str] = [
-        "hitokoto", "twq", "dog", "wangyiyun", "renjian", "weibo_hot", "douyin_hot",
-        "aiqinggongyu", "beauty_pic", "cp", "shenhuifu", "joke", "lazy_sing"
+        "hitokoto", "twq", "dog", "renjian", "weibo_hot", "douyin_hot",
+        "aiqinggongyu", "beauty_pic", "cp", "shenhuifu", "joke"
     ]
+
+    # 本地数据库支持的功能列表
+    DATABASE_SUPPORTED_COMMANDS: List[str] = [
+        "hitokoto", "twq", "dog", "aiqinggongyu", "renjian", 
+        "shenhuifu", "joke", "beauty_pic"
+    ]
+
+    class Config:
+        extra = "ignore"
 
 driver = get_driver()
 global_config = driver.config
