@@ -85,7 +85,6 @@ PERSISTENT_DATA_FILE="C:/Users/YourUsername/Documents/bot/data/persistent_data.j
       "hitokoto": true,
       "twq": true,
       "dog": true,
-      "wangyiyun": true,
       "renjian": true,
       "weibo_hot": true,
       "douyin_hot": true,
@@ -93,14 +92,12 @@ PERSISTENT_DATA_FILE="C:/Users/YourUsername/Documents/bot/data/persistent_data.j
       "beauty_pic": true,
       "cp": true,
       "shenhuifu": true,
-      "joke": true,
-      "lazy_sing": true
+      "joke": true
     },
     "7644494": {
       "hitokoto": true,
       "twq": true,
       "dog": true,
-      "wangyiyun": true,
       "renjian": true,
       "weibo_hot": true,
       "douyin_hot": true,
@@ -108,13 +105,12 @@ PERSISTENT_DATA_FILE="C:/Users/YourUsername/Documents/bot/data/persistent_data.j
       "beauty_pic": true,
       "cp": true,
       "shenhuifu": true,
-      "joke": true,
-      "lazy_sing": true
+      "joke": true
     }
   },
   "定时": {
     "群号1": {
-      "lazy_sing": [
+      "twq": [
         "14:25",
         "13:38"
       ],
