@@ -1,6 +1,6 @@
 from nonebot import require, get_bot
 from nonebot.adapters.onebot.v11 import MessageSegment, Message
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, Union, Optional, Tuple
 from .api import api
 from .database import db_manager
 from .response_handler import response_handler
@@ -111,42 +111,54 @@ class Scheduler:
         try:
             bot = get_bot()
             result = await self.execute_command(command)
-            if result:
+            
+            if isinstance(result, tuple):
+                # 处理返回多个消息的情况
+                for msg in result:
+                    if msg:
+                        await bot.send_group_msg(group_id=int(group_id), message=msg)
+            elif result:
                 await bot.send_group_msg(group_id=int(group_id), message=result)
+                
         except Exception as e:
             error_msg = response_handler.format_error(e, command)
             logger.error(f"Error in scheduled task: {e}", exc_info=True)
             try:
                 bot = get_bot()
                 await bot.send_group_msg(group_id=int(group_id), message=error_msg)
-            except:
-                logger.error("Failed to send error message to group")
+            except Exception as send_error:
+                logger.error(f"Failed to send error message to group: {send_error}")
 
-    async def execute_command(self, command: str) -> Optional[Union[Message, MessageSegment, str]]:
+    async def execute_command(self, command: str) -> Optional[Union[Message, MessageSegment, Tuple[Message, ...], str]]:
         """执行指定的命令
         
         Args:
             command (str): 要执行的命令
             
         Returns:
-            Optional[Union[Message, MessageSegment, str]]: 命令执行的结果
+            Optional[Union[Message, MessageSegment, Tuple[Message, ...], str]]: 命令执行的结果
         """
         try:
             if command == "beauty_pic":
                 # 优先从数据库获取
-                image_url = db_manager.get_random_beauty_pic()
+                image_url = await db_manager.get_random_beauty_pic()
                 if not image_url:
                     image_url = await api.get_beauty_pic()
                 return MessageSegment.image(image_url)
             
+            elif command == "cp":
+                # CP命令需要默认角色名
+                image_data = await api.get_cp_content("默认CP 默认CP2")
+                return MessageSegment.image(BytesIO(image_data))
+            
             elif command in ["hitokoto", "twq", "dog", "aiqinggongyu", "renjian", "joke", "shenhuifu"]:
                 # 优先从数据库获取
                 if command == "shenhuifu":
-                    result = db_manager.get_random_shenhuifu()
+                    result = await db_manager.get_random_shenhuifu()
                     if result:
                         return Message(f"问：{result['question']}\n答：{result['answer']}")
                 else:
-                    result = db_manager.get_random_content(command)
+                    result = await db_manager.get_random_content(command)
                     if result:
                         return Message(result)
                 
