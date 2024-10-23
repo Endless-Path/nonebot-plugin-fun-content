@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot-plugin-fun-content"
-version = "0.2.6"
+version = "0.3.0"
 description = "从多个 API 获取趣味内容，如一言、土味情话、舔狗日记等。"
 authors = ["chsiyu <rk.chensiyu@gmail.com>"]
 license = "MIT"
@@ -8,11 +8,12 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-httpx = "^0.25.0"
-nonebot2 = "^2.2.0"
-nonebot-adapter-onebot = "^2.3.0"
-pydantic = "^1.10.2"
-nonebot-plugin-apscheduler = "^0.3.0"
+httpx = "^0.26.0"
+nonebot2 = "^2.2.1"
+nonebot-adapter-onebot = "^2.4.1"
+pydantic = "^1.10.13"
+nonebot-plugin-apscheduler = "^0.4.0"
+aiosqlite = "^0.19.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
