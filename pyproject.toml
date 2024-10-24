@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "nonebot-plugin-fun-content"
-version = "0.3.0"
+version = "0.3.1"
 description = "从多个 API 获取趣味内容，如一言、土味情话、舔狗日记等。"
-authors = ["chsiyu <rk.chensiyu@gmail.com>"]
+authors = ["Endless-Path <rk.chensiyu@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 
