@@ -136,13 +136,13 @@ def handle_command(command: str):
                 if command in plugin_config.DATABASE_SUPPORTED_COMMANDS:
                     try:
                         if command == "shenhuifu":
-                            result = db_manager.get_random_shenhuifu()
+                            result = await db_manager.get_random_shenhuifu()
                             if result:
                                 await matcher.send(f"问：{result['question']}\n答：{result['answer']}")
                                 utils.set_cooldown(command, user_id, group_id, cooldown)
                                 return
                         else:
-                            result = db_manager.get_random_content(command)
+                            result = await db_manager.get_random_content(command)
                             if result:
                                 await matcher.send(result)
                                 utils.set_cooldown(command, user_id, group_id, cooldown)
