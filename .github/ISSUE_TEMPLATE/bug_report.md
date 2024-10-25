@@ -1,38 +1,30 @@
 ---
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
+name: 出现了xxx问题
+about: 详细说明问题以及它如何出现
+title: "[BUG]"
+labels: bug
 assignees: ''
 
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+**描述 bug**
+救命啊，插件出现了xxxx 问题
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+**如何复现**
+1. 我通过xxx 方式安装并导入了插件
+2. 在 xx 时候 xx 情况下，出现了 xx 问题
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+**报错截图 （python的报错请截最下面）**
+这里放截图，可使用任何截图工具截图，然后在这里按下 ** Ctrl + V **
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+**环境**
+ - 操作系统 
+ - Python 版本 
+ - Nonebot2 版本号
+ - 在那里下载的本插件
+   - pypi (商店安装 或者 pip 安装（本质一样）)
+   - github ( 说明分支 )
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
-
-**Additional context**
-Add any other context about the problem here.
+**其他内容**
+...
