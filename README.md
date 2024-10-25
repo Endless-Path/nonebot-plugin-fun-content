@@ -56,7 +56,6 @@ FUN_CONTENT_COOLDOWNS='
 	"hitokoto": 20, 
 	"twq": 20,  
 	"dog": 20, 
-	"wangyiyun": 20, 
 	"renjian": 20,
 	"weibo_hot": 20, 
 	"douyin_hot": 20,
@@ -64,8 +63,7 @@ FUN_CONTENT_COOLDOWNS='
 	"beauty_pic": 20, 
 	"cp": 20, 
 	"shenhuifu": 20,
-	"joke": 20,
-	"lazy_sing": 60
+	"joke": 20
 }
 '
 #开关和定时任务配置文件路径配置（默认在插件目录下，可不配置）
