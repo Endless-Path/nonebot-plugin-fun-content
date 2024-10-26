@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union, List
+from typing import Dict, Any
 import httpx
 import sqlite3
 import logging
