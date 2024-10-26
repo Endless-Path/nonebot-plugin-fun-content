@@ -6,7 +6,6 @@ from .scheduler import scheduler_instance
 from .utils import utils
 from .database import db_manager
 import logging
-import sys
 
 __plugin_meta__ = PluginMetadata(
     name="趣味内容插件",
