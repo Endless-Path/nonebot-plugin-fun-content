@@ -1,13 +1,11 @@
 import httpx
-from typing import Dict, Any, List, Union, Optional
+from typing import Dict, Any, List, Union
 from .config import plugin_config
 from .database import db_manager
 from .response_handler import response_handler
 import logging
 import random
 from functools import wraps
-from pathlib import Path
-from io import BytesIO
 
 # 设置日志记录
 logger = logging.getLogger(__name__)

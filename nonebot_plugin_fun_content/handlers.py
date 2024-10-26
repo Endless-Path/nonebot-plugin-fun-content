@@ -11,8 +11,6 @@ from .config import plugin_config
 from .scheduler import scheduler_instance as scheduler
 from .response_handler import response_handler
 import logging
-import httpx
-import sqlite3
 from io import BytesIO
 from typing import Dict, Tuple, List, Union
 
