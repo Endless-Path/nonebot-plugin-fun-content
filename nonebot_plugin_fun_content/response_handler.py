@@ -2,6 +2,7 @@ from typing import Dict, Any
 import httpx
 import sqlite3
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -68,21 +69,32 @@ class ResponseHandler:
 
     @staticmethod
     def process_api_text(data: Dict[str, Any], error_msg: str) -> str:
-        """处理文本类API响应
-        
+        """处理文本类API响应，将HTML格式转换为纯文本。
+    
         Args:
             data (Dict[str, Any]): API返回的数据
             error_msg (str): 错误消息
-            
+        
         Returns:
-            str: 处理后的内容
+            str: 处理后的纯文本内容或错误信息
         """
-        # 检查响应码
-        if isinstance(data, dict):
-            if data.get('code') in [200, '200'] or data.get('success'):
-                content = data.get('data') or data.get('content')
-                if content:
-                    return content.replace("<br>", "\n").strip()
-        return error_msg
+        # 检查响应是否为字典并且响应码成功
+        if isinstance(data, dict) and (data.get('code') in [200, '200'] or data.get('success')):
+            content = data.get('data') or data.get('content')
+        
+            if content:
+                # 替换常见的HTML标签为换行或空格
+                content = content.replace("<br>", "\n").replace("<br/>", "\n").replace("<br />", "\n")
+                content = content.replace("&nbsp;", " ").replace("&amp;", "&")
+            
+                # 使用正则表达式去除所有其他HTML标签
+                content = re.sub(r'<[^>]+>', '', content)
+            
+                # 去除多余的空格和空行
+                content = re.sub(r'\n\s*\n', '\n', content).strip()
+            
+                return content
+            
+        return error_msg  # 返回错误信息，如果响应不符合预期或无内容
 
 response_handler = ResponseHandler()
