@@ -32,7 +32,7 @@ _✨趣味内容插件✨_
 
 </details>
 
-<details open>
+<details>
 <summary>使用 pip 安装</summary>
 在 nonebot2 项目的根目录下打开命令行, 输入以下指令即可安装
 
