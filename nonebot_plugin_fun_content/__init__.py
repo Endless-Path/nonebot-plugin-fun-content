@@ -9,7 +9,7 @@ import logging
 
 __plugin_meta__ = PluginMetadata(
     name="趣味内容插件",
-    description="从本地数据库或在线API获取趣味内容，如一言、土味情话、舔狗日记等。",
+    description="从本地数据库或在线API获取趣味内容，如一言、土味情话、舔狗日记等。可以分群开关功能，支持定时任务。",
     usage="""
     - 一言: 发送 "一言" 获取一句话的灵感。
     - 土味情话: 发送 "土味情话"、"情话" 或 "土味" 获取土味情话。
