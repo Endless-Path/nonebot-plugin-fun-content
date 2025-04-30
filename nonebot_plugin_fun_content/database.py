@@ -1,9 +1,11 @@
-import aiosqlite
 import asyncio
-from pathlib import Path
 import logging
-from typing import Dict, Any, Optional, List, Union
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 from contextlib import asynccontextmanager
+
+import aiosqlite
+
 from .config import plugin_config
 
 # 设置日志记录
@@ -22,15 +24,15 @@ class DatabasePool:
         """初始化连接池"""
         if self._initialized:
             return
-        
+
         async with self._pool_lock:
             if self._initialized:  # 双重检查
                 return
-                
+
             for _ in range(self.pool_size):
                 conn = await self._create_connection()
                 self._pool.append(conn)
-            
+
             self._initialized = True
             logger.info(f"Database pool initialized with {self.pool_size} connections")
 
@@ -47,7 +49,7 @@ class DatabasePool:
         """获取数据库连接"""
         if not self._initialized:
             await self.initialize()
-        
+
         async with self._pool_lock:
             # 从池中获取连接
             if self._pool:
@@ -88,7 +90,7 @@ class DatabaseManager:
             raise FileNotFoundError(f"Database file not found at {self.db_path}")
 
         self.pool = DatabasePool(self.db_path)
-        
+
         # 定义数据库表配置
         self.table_config = {
             "hitokoto": {
@@ -157,13 +159,13 @@ class DatabaseManager:
 
     async def get_random_content(self, command: str) -> Optional[str]:
         """获取随机内容
-        
+
         Args:
             command: 命令名称
-            
+
         Returns:
             Optional[str]: 随机内容，如果出错则返回None
-            
+
         Raises:
             ValueError: 如果命令未知
         """
@@ -176,7 +178,7 @@ class DatabaseManager:
         process_br = config.get("process_br", False)
 
         query = f"SELECT {content_column} FROM {table} ORDER BY RANDOM() LIMIT 1"
-        
+
         try:
             result = await self._fetch_one(query)
             if not result:
@@ -190,7 +192,7 @@ class DatabaseManager:
 
     async def get_random_shenhuifu(self) -> Optional[Dict[str, str]]:
         """获取随机神回复
-        
+
         Returns:
             Optional[Dict[str, str]]: 包含问题和答案的字典
         """
@@ -201,7 +203,7 @@ class DatabaseManager:
             ORDER BY RANDOM() 
             LIMIT 1
         """
-        
+
         try:
             result = await self._fetch_one(query)
             if not result:
@@ -217,13 +219,13 @@ class DatabaseManager:
 
     async def get_random_beauty_pic(self) -> Optional[str]:
         """获取随机美女图片URL
-        
+
         Returns:
             Optional[str]: 图片URL
         """
         config = self.table_config["beauty_pic"]
         query = f"SELECT {config['content_column']} FROM {config['table']} ORDER BY RANDOM() LIMIT 1"
-        
+
         try:
             result = await self._fetch_one(query)
             return result[config['content_column']] if result else None
@@ -231,14 +233,14 @@ class DatabaseManager:
             logger.error(f"Error getting random beauty pic URL: {e}")
             return None
 
-    async def batch_get_random_content(self, commands: List[str], 
-                                     batch_size: int = 10) -> Dict[str, List[str]]:
+    async def batch_get_random_content(self, commands: List[str],
+                                      batch_size: int = 10) -> Dict[str, List[str]]:
         """批量获取随机内容
-        
+
         Args:
             commands: 要获取内容的命令列表
             batch_size: 每个命令获取的数量
-            
+
         Returns:
             Dict[str, List[str]]: 命令到内容列表的映射
         """
@@ -256,7 +258,7 @@ class DatabaseManager:
                         ORDER BY RANDOM() 
                         LIMIT {batch_size}
                     """
-                    
+
                     contents = []
                     async with conn.execute(query) as cursor:
                         async for row in cursor:
@@ -264,12 +266,12 @@ class DatabaseManager:
                             if config.get('process_br', False):
                                 content = self._process_text(content)
                             contents.append(content)
-                    
+
                     results[command] = contents
                 except Exception as e:
                     logger.error(f"Error in batch getting content for {command}: {e}")
                     results[command] = []
-                    
+
         return results
 
     async def close(self):

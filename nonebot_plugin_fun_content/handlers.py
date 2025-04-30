@@ -1,18 +1,22 @@
+import logging
+from io import BytesIO
+from typing import Dict, Tuple, List, Union
+
 from nonebot import on_command
-from nonebot.adapters.onebot.v11 import MessageSegment, Message, MessageEvent, GroupMessageEvent
+from nonebot.adapters.onebot.v11 import (
+    MessageSegment, Message, MessageEvent, GroupMessageEvent
+)
 from nonebot.matcher import Matcher
 from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER
 from nonebot.adapters.onebot.v11.permission import GROUP_ADMIN, GROUP_OWNER
+
 from .utils import utils
 from .api import api
 from .database import db_manager
 from .config import plugin_config
 from .scheduler import scheduler_instance as scheduler
 from .response_handler import response_handler
-import logging
-from io import BytesIO
-from typing import Dict, Tuple, List, Union
 
 # 设置日志记录
 logger = logging.getLogger(__name__)
@@ -75,7 +79,7 @@ def is_strict_command_match(command: str, user_input: str) -> bool:
     main_alias, other_aliases = COMMANDS[command]["aliases"]
     all_aliases = [main_alias] + other_aliases
     allow_args = COMMANDS[command]["allow_args"]
-    
+
     if allow_args:
         return any(user_input.strip().lower().startswith(alias.lower()) for alias in all_aliases)
     else:
@@ -85,11 +89,11 @@ def handle_command(command: str):
     """返回命令处理函数"""
     async def handler(matcher: Matcher, event: MessageEvent, args: Message = CommandArg()):
         user_input = event.get_plaintext().strip()
-        
+
         # 严格匹配指令
         if not is_strict_command_match(command, user_input):
             await matcher.finish()
-        
+
         # 检查是否为群消息事件
         if isinstance(event, GroupMessageEvent):
             group_id = str(event.group_id)
@@ -171,7 +175,7 @@ async def handle_enable(matcher: Matcher, event: GroupMessageEvent, args: Messag
         if function == main_alias or function in other_aliases:
             utils.enable_function(group_id, cmd)
             await matcher.finish(f"{main_alias}已启用。")
-    
+
     await matcher.finish(f"未找到名为 '{function}' 的功能。")
 
 async def handle_disable(matcher: Matcher, event: GroupMessageEvent, args: Message = CommandArg()):
@@ -184,7 +188,7 @@ async def handle_disable(matcher: Matcher, event: GroupMessageEvent, args: Messa
         if function == main_alias or function in other_aliases:
             utils.disable_function(group_id, cmd)
             await matcher.finish(f"{main_alias}已禁用。")
-    
+
     await matcher.finish(f"未找到名为 '{function}' 的功能。")
 
 async def handle_status(matcher: Matcher, event: GroupMessageEvent):
@@ -195,7 +199,7 @@ async def handle_status(matcher: Matcher, event: GroupMessageEvent):
         main_alias, _ = info["aliases"]
         status = "已启用" if utils.is_function_enabled(group_id, cmd) else "已禁用"
         status_messages.append(f"{main_alias}: {status}")
-    
+
     await matcher.finish("\n".join(status_messages))
 
 async def handle_set_schedule(matcher: Matcher, event: GroupMessageEvent, args: Message = CommandArg()):
@@ -236,7 +240,7 @@ async def handle_disable_schedule(matcher: Matcher, event: GroupMessageEvent, ar
     command_args = args.extract_plain_text().strip().split()
     if len(command_args) != 2:
         await matcher.finish("参数错误，请使用正确的格式：定时任务禁用 [功能指令] [时间]")
-    
+
     function, time = command_args
     for cmd, info in COMMANDS.items():
         main_alias, other_aliases = info["aliases"]
@@ -248,5 +252,5 @@ async def handle_disable_schedule(matcher: Matcher, event: GroupMessageEvent, ar
                     await matcher.finish(f"未找到 {main_alias} 在 {time} 的定时任务。")
             else:
                 await matcher.finish("时间格式错误，请使用 HH:MM 格式。")
-    
+
     await matcher.finish(f"未找到名为 '{function}' 的功能。")

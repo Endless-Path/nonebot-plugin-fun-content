@@ -1,9 +1,9 @@
+import os
 import time
 import json
-import os
-from typing import Dict, Any, List
-from .config import plugin_config
 import logging
+from typing import Any, Dict, List
+from .config import plugin_config
 
 # 设置日志记录器
 logger = logging.getLogger(__name__)
@@ -28,23 +28,23 @@ class Utils:
             "开关": {},
             "定时": {}
         }
-        
+
         if not os.path.exists(file_path):
             logger.info(f"Persistent data file not found. Creating new file at {file_path}")
             self._save_persistent_data(default_data)
             return default_data
-        
+
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             logger.info(f"Successfully loaded persistent data from {file_path}")
-            
+
             # 确保数据结构正确
             if "开关" not in data:
                 data["开关"] = {}
             if "定时" not in data:
                 data["定时"] = {}
-            
+
             return data
         except json.JSONDecodeError as e:
             logger.error(f"Error decoding JSON from {file_path}: {str(e)}")
