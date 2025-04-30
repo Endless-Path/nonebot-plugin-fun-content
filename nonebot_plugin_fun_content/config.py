@@ -1,7 +1,8 @@
-from pydantic import BaseModel, HttpUrl, Field
-from typing import Dict, List, Union 
 from pathlib import Path
+from typing import Dict, List, Union
+
 from nonebot import get_driver
+from pydantic import BaseModel, Field, HttpUrl
 
 class Config(BaseModel):
     # 数据库配置
@@ -75,7 +76,7 @@ class Config(BaseModel):
 
     # 本地数据库支持的功能列表
     DATABASE_SUPPORTED_COMMANDS: List[str] = [
-        "hitokoto", "twq", "dog", "aiqinggongyu", "renjian", 
+        "hitokoto", "twq", "dog", "aiqinggongyu", "renjian",
         "shenhuifu", "joke", "beauty_pic"
     ]
 

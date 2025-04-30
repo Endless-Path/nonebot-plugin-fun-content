@@ -1,11 +1,13 @@
-import httpx
-from typing import Dict, Any, List, Union
-from .config import plugin_config
-from .database import db_manager
-from .response_handler import response_handler
 import logging
 import random
 from functools import wraps
+from typing import Any, Dict, List, Union
+
+import httpx
+
+from .config import plugin_config
+from .database import db_manager
+from .response_handler import response_handler
 
 # 设置日志记录
 logger = logging.getLogger(__name__)
@@ -39,12 +41,12 @@ class API:
                     logger.info(f"Sending hitokoto request to {url}")
                     response = await self.client.get(url)
                     response.raise_for_status()
-                    
+
                     if response.headers.get('content-type', '').startswith('application/json'):
                         data = response.json()
                     else:
                         data = response.text
-                    
+
                     logger.info(f"Received hitokoto response from {url}")
                     return func(data)
                 except Exception as e:
@@ -64,13 +66,13 @@ class API:
 
     async def get_content(self, endpoint: str) -> str:
         """获取指定API端点的内容
-        
+
         Args:
             endpoint: API端点名称
-            
+
         Returns:
             str: 获取的内容
-            
+
         Raises:
             ValueError: 如果获取失败
         """
@@ -81,7 +83,7 @@ class API:
             return await self.get_beauty_pic()
         elif endpoint == "dog":
             return await self._get_dog_content()
-            
+
         # 尝试从本地数据库获取
         try:
             if endpoint in plugin_config.DATABASE_SUPPORTED_COMMANDS:
@@ -93,7 +95,7 @@ class API:
                     result = await db_manager.get_random_content(endpoint)
                     if result:
                         return result
-                        
+
         except Exception as e:
             logger.warning(f"Failed to get content from local database for {endpoint}: {e}")
 
@@ -136,7 +138,7 @@ class API:
             result = await handler(self)
             if result:
                 return result
-        
+
         raise ValueError("获取一言失败")
 
     async def _get_dog_content(self) -> str:
@@ -151,7 +153,7 @@ class API:
         # 如果本地获取失败，尝试在线API
         urls = plugin_config.fun_content_api_urls.get("dog", [])
         random.shuffle(urls)
-        
+
         for url in urls:
             try:
                 response = await self.client.get(url)
@@ -163,7 +165,7 @@ class API:
             except Exception as e:
                 logger.error(f"Error in dog API {url}: {e}")
                 continue
-        
+
         raise ValueError("获取舔狗日记失败")
 
     async def get_beauty_pic(self) -> str:
@@ -178,7 +180,7 @@ class API:
         # 如果本地获取失败，尝试在线API
         urls = plugin_config.fun_content_api_urls.get("beauty_pic", [])
         random.shuffle(urls)
-        
+
         for url in urls:
             try:
                 response = await self.client.get(url)
@@ -190,7 +192,7 @@ class API:
             except Exception as e:
                 logger.error(f"Error in beauty pic API {url}: {e}")
                 continue
-        
+
         raise ValueError("获取美女图片失败")
 
     async def get_cp_content(self, args: str) -> bytes:
@@ -241,7 +243,7 @@ class API:
                 if content:
                     return content
         return "获取舔狗日记失败"
-    
+
     def _process_renjian(self, data: Dict[str, Any]) -> str:
         return response_handler.process_api_text(data, "获取人间凑数内容失败")
 

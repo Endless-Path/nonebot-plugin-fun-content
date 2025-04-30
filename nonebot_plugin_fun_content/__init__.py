@@ -1,11 +1,13 @@
+import logging
+
 from nonebot import get_driver
 from nonebot.plugin import PluginMetadata
-from .handlers import register_handlers
+
 from .config import plugin_config
+from .database import db_manager
+from .handlers import register_handlers
 from .scheduler import scheduler_instance
 from .utils import utils
-from .database import db_manager
-import logging
 
 __plugin_meta__ = PluginMetadata(
     name="趣味内容插件",
@@ -60,7 +62,7 @@ async def plugin_init():
         return
 
     logger.info("趣味内容插件正在初始化...")
-    
+
     # 检查数据库
     try:
         # 测试数据库连接和基本查询
@@ -75,7 +77,7 @@ async def plugin_init():
     except Exception as e:
         logger.error(f"数据库初始化失败: {e}")
         logger.error("插件将仅使用在线API功能")
-    
+
     # 初始化定时任务
     try:
         for group_id, group_tasks in utils.persistent_data["定时"].items():
@@ -88,7 +90,7 @@ async def plugin_init():
         logger.info("定时任务初始化完成")
     except Exception as e:
         logger.error(f"定时任务初始化失败: {e}")
-    
+
     initialization_completed = True
     logger.info("趣味内容插件初始化完成")
 
@@ -99,7 +101,7 @@ async def plugin_shutdown():
     执行必要的清理工作
     """
     logger.info("趣味内容插件正在关闭...")
-    
+
     # 更新定时任务数据
     try:
         utils.persistent_data["定时"] = {
@@ -107,19 +109,19 @@ async def plugin_shutdown():
                 command: times for command, times in group_tasks.items() if times
             } for group_id, group_tasks in scheduler_instance.jobs.items()
         }
-        
+
         # 移除空的群组数据
         utils.persistent_data["定时"] = {
             group_id: group_tasks for group_id, group_tasks in utils.persistent_data["定时"].items() if group_tasks
         }
-        
+
         utils._save_persistent_data()
         logger.info("定时任务数据已保存")
     except Exception as e:
         logger.error(f"定时任务数据保存失败: {e}")
-    
+
     logger.info("趣味内容插件已关闭")
-    
+
 # 注册处理程序
 register_handlers()
 
