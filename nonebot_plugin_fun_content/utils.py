@@ -2,7 +2,7 @@ import os
 import time
 import json
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from .config import plugin_config
 
 # 设置日志记录器
@@ -53,20 +53,21 @@ class Utils:
             logger.error(f"Unexpected error loading data from {file_path}: {str(e)}")
             return default_data
 
-    def _save_persistent_data(self, data: Dict[str, Any] = None):
+    def _save_persistent_data(self, data: Optional[Dict[str, Any]] = None) -> None:
         """
         保存持久化数据到文件
 
         :param data: 要保存的数据，如果为 None 则保存 self.persistent_data
         """
-        if data is None:
-            data = self.persistent_data
+        data_to_save = data if data is not None else self.persistent_data
         try:
             with open(plugin_config.persistent_data_file, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=2, ensure_ascii=False)
+                json.dump(data_to_save, f, indent=2, ensure_ascii=False)
             logger.info(f"Successfully saved persistent data to {plugin_config.persistent_data_file}")
+        except (OSError, json.JSONDecodeError) as e:
+            logger.error(f"Failed to save persistent data to {plugin_config.persistent_data_file}: {str(e)}")
         except Exception as e:
-            logger.error(f"Error saving persistent data: {str(e)}")
+            logger.error(f"Unexpected error while saving persistent data: {str(e)}")
 
     def get_group_config(self, group_id: str) -> Dict[str, Any]:
         """
