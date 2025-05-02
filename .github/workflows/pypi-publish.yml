@@ -3,33 +3,39 @@ name: Publish Package
 on:
   push:
     tags:
-      - v*
+      - v* # 仅在推送符合 v* 格式的标签时触发
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      id-token: write
+      contents: read # 允许读取仓库内容
+      id-token: write # 用于身份验证的令牌权限
     steps:
-      - uses: actions/checkout@v3
+      # 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v3
 
+      # 设置 Python 环境
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
+      # 安装依赖项
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install poetry
 
-      - name: Build
+      # 构建分发包
+      - name: Build package
         run: |
-          poetry self add "poetry-dynamic-versioning[plugin]"
-          rm -fr dist/ && poetry build
+          poetry self add "poetry-dynamic-versioning[plugin]" # 添加动态版本插件
+          rm -rf dist/ && poetry build # 清理旧的构建文件并构建新包
 
-      - name: Publish distribution 📦 to PyPI
+      # 发布到 PyPI
+      - name: Publish distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          password: ${{ secrets.PYPI_TOKEN }}
+          password: ${{ secrets.PYPI_TOKEN }} # 使用 PyPI 的 API 密钥
