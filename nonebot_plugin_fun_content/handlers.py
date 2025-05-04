@@ -1,6 +1,6 @@
 import logging
 from io import BytesIO
-from typing import Dict, Tuple, List, Union
+from typing import TypedDict
 
 from nonebot import on_command
 from nonebot.adapters.onebot.v11 import (
@@ -21,8 +21,18 @@ from .response_handler import response_handler
 # 设置日志记录
 logger = logging.getLogger(__name__)
 
+class CommandConfig(TypedDict):
+    """命令配置的类型定义
+
+    Attributes:
+        aliases: 命令别名元组，包含(主别名, [其他别名列表])
+        allow_args: 是否允许命令带参数
+    """
+    aliases: tuple[str, list[str]]  # (主别名, [其他别名列表])
+    allow_args: bool  # 是否允许命令带参数
+
 # 定义命令及其别名
-COMMANDS: Dict[str, Dict[str, Union[Tuple[str, List[str]], bool]]] = {
+COMMANDS: dict[str, CommandConfig] = {
     "hitokoto": {"aliases": ("一言", []), "allow_args": False},
     "twq": {"aliases": ("土味情话", ["情话", "土味"]), "allow_args": False},
     "dog": {"aliases": ("舔狗日记", ["dog", "舔狗"]), "allow_args": False},
