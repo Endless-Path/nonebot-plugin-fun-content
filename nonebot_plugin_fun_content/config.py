@@ -64,7 +64,7 @@ class Config(BaseModel):
 
     # 持久化数据存储路径
     persistent_data_file: Path = Field(
-        default=Path(__file__).parent / "persistent_data.json",
+        default=Path("config") / "persistent_data.json",
         env="PERSISTENT_DATA_FILE"
     )
 
