@@ -1,7 +1,7 @@
-import os
 import time
 import json
 import logging
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 from .config import plugin_config
 
@@ -10,64 +10,50 @@ logger = logging.getLogger(__name__)
 
 class Utils:
     def __init__(self):
-        """
-        初始化 Utils 类
-        创建冷却时间字典和加载持久化数据
-        """
         self.cooldowns: Dict[str, Dict[str, Dict[str, float]]] = {}
         self.persistent_data = self._load_persistent_data()
 
     def _load_persistent_data(self) -> Dict[str, Any]:
-        """
-        从文件加载持久化数据
+        """从文件加载持久化数据"""
+        file_path = Path(plugin_config.persistent_data_file)
+        default_data = {"开关": {}, "定时": {}}
 
-        :return: 加载的数据字典，如果加载失败则返回默认数据
-        """
-        file_path = plugin_config.persistent_data_file
-        default_data = {
-            "开关": {},
-            "定时": {}
-        }
-
-        if not os.path.exists(file_path):
+        if not file_path.exists():
             logger.info(f"Persistent data file not found. Creating new file at {file_path}")
             self._save_persistent_data(default_data)
             return default_data
 
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with file_path.open('r', encoding='utf-8') as f:
                 data = json.load(f)
             logger.info(f"Successfully loaded persistent data from {file_path}")
 
             # 确保数据结构正确
-            if "开关" not in data:
-                data["开关"] = {}
-            if "定时" not in data:
-                data["定时"] = {}
-
+            data.setdefault("开关", {})
+            data.setdefault("定时", {})
             return data
         except json.JSONDecodeError as e:
             logger.error(f"Error decoding JSON from {file_path}: {str(e)}")
             return default_data
         except Exception as e:
-            logger.error(f"Unexpected error loading data from {file_path}: {str(e)}")
+            logger.error(f"Unexpected error loading data: {str(e)}")
             return default_data
 
     def _save_persistent_data(self, data: Optional[Dict[str, Any]] = None) -> None:
-        """
-        保存持久化数据到文件
-
-        :param data: 要保存的数据，如果为 None 则保存 self.persistent_data
-        """
+        """保存持久化数据到文件"""
         data_to_save = data if data is not None else self.persistent_data
+        file_path = Path(plugin_config.persistent_data_file)
+
         try:
-            with open(plugin_config.persistent_data_file, 'w', encoding='utf-8') as f:
+            # 自动创建父目录
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            with file_path.open('w', encoding='utf-8') as f:
                 json.dump(data_to_save, f, indent=2, ensure_ascii=False)
-            logger.info(f"Successfully saved persistent data to {plugin_config.persistent_data_file}")
-        except (OSError, json.JSONDecodeError) as e:
-            logger.error(f"Failed to save persistent data to {plugin_config.persistent_data_file}: {str(e)}")
+            logger.info(f"Successfully saved persistent data to {file_path}")
+        except (PermissionError, TypeError, ValueError) as e:
+            logger.error(f"Failed to save data: {str(e)}")
         except Exception as e:
-            logger.error(f"Unexpected error while saving persistent data: {str(e)}")
+            logger.error(f"Unexpected error while saving: {str(e)}")
 
     def get_group_config(self, group_id: str) -> Dict[str, Any]:
         """
