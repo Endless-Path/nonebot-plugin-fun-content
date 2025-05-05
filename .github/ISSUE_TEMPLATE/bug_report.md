@@ -28,8 +28,8 @@ assignees: ''
 **环境**
 
 - 操作系统 （如Windows 11 22H2/Ubuntu 22.04）
-- Python 版本 （如3.8.10，请通过`python -V`确认）
-- Nonebot2 版本号 （如v2.0.0，请通过`nb run -v`查看）
+- Python 版本 （如3.10.9，请通过`python -V`确认）
+- Nonebot2 版本号 （如v2.0.0）
 - 在那里下载的本插件
     - pypi (商店安装 或者 pip 安装（本质一样）) （建议提供`pip list`输出）
     - github ( 说明分支 ) （如main/dev分支）
