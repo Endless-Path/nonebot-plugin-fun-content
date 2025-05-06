@@ -1,15 +1,13 @@
 import asyncio
-import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 from contextlib import asynccontextmanager
 
 import aiosqlite
 
+from nonebot import logger
 from .config import plugin_config
 
-# 设置日志记录
-logger = logging.getLogger(__name__)
 
 class DatabasePool:
     """数据库连接池"""
@@ -34,7 +32,7 @@ class DatabasePool:
                 self._pool.append(conn)
 
             self._initialized = True
-            logger.info(f"Database pool initialized with {self.pool_size} connections")
+            logger.success(f"Database pool initialized with {self.pool_size} connections")
 
     async def _create_connection(self) -> aiosqlite.Connection:
         """创建新的数据库连接"""
@@ -79,7 +77,8 @@ class DatabasePool:
                 await conn.close()
             self._pool.clear()
             self._initialized = False
-        logger.info("All database connections closed")
+        logger.success("All database connections closed")
+
 
 class DatabaseManager:
     def __init__(self):
@@ -198,9 +197,9 @@ class DatabaseManager:
         """
         config = self.table_config["shenhuifu"]
         query = f"""
-            SELECT {config['questions_column']}, {config['answers_column']} 
-            FROM {config['table']} 
-            ORDER BY RANDOM() 
+            SELECT {config['questions_column']}, {config['answers_column']}
+            FROM {config['table']}
+            ORDER BY RANDOM()
             LIMIT 1
         """
 
@@ -234,7 +233,7 @@ class DatabaseManager:
             return None
 
     async def batch_get_random_content(self, commands: List[str],
-                                      batch_size: int = 10) -> Dict[str, List[str]]:
+                                       batch_size: int = 10) -> Dict[str, List[str]]:
         """批量获取随机内容
 
         Args:
@@ -278,6 +277,7 @@ class DatabaseManager:
         """关闭数据库连接池"""
         await self.pool.close_all()
 
+
 # 创建数据库管理器实例
 db_manager = DatabaseManager()
 
@@ -285,10 +285,12 @@ db_manager = DatabaseManager()
 import atexit
 import asyncio
 
+
 def cleanup_db():
     """清理数据库连接"""
     loop = asyncio.get_event_loop()
     if not loop.is_closed():
         loop.run_until_complete(db_manager.close())
+
 
 atexit.register(cleanup_db)

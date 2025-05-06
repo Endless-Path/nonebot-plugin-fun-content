@@ -1,16 +1,14 @@
-import logging
 import random
 from functools import wraps
 from typing import Any, Dict, List, Union
 
 import httpx
 
+from nonebot import logger
 from .config import plugin_config
 from .database import db_manager
 from .response_handler import response_handler
 
-# 设置日志记录
-logger = logging.getLogger(__name__)
 
 class API:
     def __init__(self):
@@ -47,7 +45,7 @@ class API:
                     else:
                         data = response.text
 
-                    logger.info(f"Received hitokoto response from {url}")
+                    logger.success(f"Received hitokoto response from {url}")
                     return func(data)
                 except Exception as e:
                     logger.error(f"Error in hitokoto API: {e}")
@@ -113,7 +111,7 @@ class API:
             response = await self.client.get(url)
             response.raise_for_status()
             data = response.json()
-            logger.info(f"Received response from {url}")
+            logger.success(f"Received response from {url}")
 
             process_func = self.process_functions.get(endpoint)
             if process_func:
@@ -279,6 +277,7 @@ class API:
     def _process_douyin_hot(self, data: Dict[str, Any]) -> str:
         """处理抖音热搜API的响应"""
         return response_handler.process_hot_list(data, "抖音热搜")
+
 
 # 创建API实例
 api = API()

@@ -1,11 +1,11 @@
-import logging
 import re
 import sqlite3
 from typing import Any, Dict
 
 import httpx
 
-logger = logging.getLogger(__name__)
+from nonebot import logger
+
 
 class ResponseHandler:
     """统一处理API响应和错误的工具类"""
@@ -97,5 +97,6 @@ class ResponseHandler:
                 return content
 
         return error_msg  # 返回错误信息，如果响应不符合预期或无内容
+
 
 response_handler = ResponseHandler()

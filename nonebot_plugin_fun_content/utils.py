@@ -1,13 +1,10 @@
 import time
 import json
-import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from nonebot import logger
 from .config import plugin_config
-
-# 设置日志记录器
-logger = logging.getLogger(__name__)
 
 
 class Utils:
@@ -42,7 +39,7 @@ class Utils:
         self._ensure_file_exists()
         try:
             data = json.loads(self.persistent_data_file.read_text(encoding='utf-8'))
-            logger.info(f"Successfully loaded persistent data from {self.persistent_data_file}")
+            logger.success(f"Successfully loaded persistent data from {self.persistent_data_file}")
             data.setdefault(self.SWITCH_KEY, {})
             data.setdefault(self.SCHEDULED_KEY, {})
             return data
@@ -64,7 +61,7 @@ class Utils:
         try:
             self._ensure_directory_exists()
             self.persistent_data_file.write_text(json.dumps(data_to_save, indent=2, ensure_ascii=False), encoding='utf-8')
-            logger.info(f"Successfully saved persistent data to {self.persistent_data_file}")
+            logger.success(f"Successfully saved persistent data to {self.persistent_data_file}")
         except (PermissionError, TypeError, ValueError) as e:
             logger.error(f"Failed to save data: {str(e)}")
         except Exception as e:

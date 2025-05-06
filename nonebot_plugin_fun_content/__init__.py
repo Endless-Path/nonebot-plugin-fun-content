@@ -1,6 +1,4 @@
-import logging
-
-from nonebot import get_driver
+from nonebot import get_driver, logger
 from nonebot.plugin import PluginMetadata
 
 from .config import plugin_config
@@ -38,13 +36,6 @@ __plugin_meta__ = PluginMetadata(
     supported_adapters={"~onebot.v11"},
 )
 
-# 配置日志
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter('[%(asctime)s] [%(levelname)s]: %(message)s'))
-logger.addHandler(handler)
-
 # 获取驱动以访问全局配置
 driver = get_driver()
 
@@ -70,13 +61,13 @@ async def plugin_init():
         if test_content is None:
             logger.warning("数据库连接成功但未能获取测试内容")
         else:
-            logger.info("数据库连接测试成功")
+            logger.success("数据库连接测试成功")
     except FileNotFoundError:
         logger.error(f"数据库文件未找到: {plugin_config.fun_content_db_path}")
-        logger.error("插件将仅使用在线API功能")
+        logger.warning("插件将仅使用在线API功能")
     except Exception as e:
         logger.error(f"数据库初始化失败: {e}")
-        logger.error("插件将仅使用在线API功能")
+        logger.warning("插件将仅使用在线API功能")
 
     # 初始化定时任务
     try:
@@ -87,12 +78,12 @@ async def plugin_init():
                         scheduler_instance.add_job(group_id, command, time)
                     except Exception as e:
                         logger.error(f"定时任务添加失败 - 群组: {group_id}, 命令: {command}, 时间: {time}: {str(e)}")
-        logger.info("定时任务初始化完成")
+        logger.success("定时任务初始化完成")
     except Exception as e:
         logger.error(f"定时任务初始化失败: {e}")
 
     initialization_completed = True
-    logger.info("趣味内容插件初始化完成")
+    logger.success("趣味内容插件初始化完成")
 
 @driver.on_shutdown
 async def plugin_shutdown():
@@ -116,7 +107,7 @@ async def plugin_shutdown():
         }
 
         utils._save_persistent_data()
-        logger.info("定时任务数据已保存")
+        logger.success("定时任务数据已保存")
     except Exception as e:
         logger.error(f"定时任务数据保存失败: {e}")
 
@@ -128,8 +119,8 @@ register_handlers()
 # Bot连接和断开连接的处理
 @driver.on_bot_connect
 async def handle_connect(bot):
-    logger.info(f"Bot {bot.self_id} 已连接")
+    logger.success(f"Bot {bot.self_id} 已连接")
 
 @driver.on_bot_disconnect
 async def handle_disconnect(bot):
-    logger.info(f"Bot {bot.self_id} 已断开连接")
+    logger.warning(f"Bot {bot.self_id} 已断开连接")

@@ -1,8 +1,7 @@
-import logging
 from io import BytesIO
 from typing import TypedDict
 
-from nonebot import on_command
+from nonebot import on_command, logger
 from nonebot.adapters.onebot.v11 import (
     MessageSegment, Message, MessageEvent, GroupMessageEvent
 )
@@ -18,8 +17,6 @@ from .config import plugin_config
 from .scheduler import scheduler_instance as scheduler
 from .response_handler import response_handler
 
-# 设置日志记录
-logger = logging.getLogger(__name__)
 
 class CommandConfig(TypedDict):
     """命令配置的类型定义
