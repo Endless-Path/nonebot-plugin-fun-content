@@ -17,15 +17,15 @@ class API:
         self.hitokoto_handlers = []
         self.process_functions = {
             "hitokoto": self._process_hitokoto_multiple,
-            "twq": self._process_twq,
-            "dog": self._process_dog,
-            "renjian": self._process_renjian,
-            "weibo_hot": self._process_weibo_hot,
-            "aiqinggongyu": self._process_aiqinggongyu,
+            "twq": response_handler.process_api_text,
+            "dog": response_handler.process_api_text,
+            "renjian": response_handler.process_api_text,
+            "weibo_hot": response_handler.process_hot_list,
+            "aiqinggongyu": response_handler.process_api_text,
             "shenhuifu": self._process_shenhuifu,
-            "joke": self._process_joke,
+            "joke": response_handler.process_api_text,
             "beauty_pic": self._process_beauty_pic,
-            "douyin_hot": self._process_douyin_hot,
+            "douyin_hot": response_handler.process_hot_list,
         }
         self._setup_hitokoto_handlers()
 
@@ -48,7 +48,8 @@ class API:
                     logger.success(f"Received hitokoto response from {url}")
                     return func(data)
                 except Exception as e:
-                    logger.error(f"Error in hitokoto API: {e}")
+                    error_msg = response_handler.format_error(e, "hitokoto")
+                    logger.error(error_msg)
                 return None
             return wrapper
         return decorator
@@ -95,7 +96,8 @@ class API:
                         return result
 
         except Exception as e:
-            logger.warning(f"Failed to get content from local database for {endpoint}: {e}")
+            error_msg = response_handler.format_error(e, endpoint)
+            logger.warning(error_msg)
 
         # 如果本地数据库获取失败或不支持的端点，使用在线API
         return await self._get_online_content(endpoint)
@@ -115,11 +117,17 @@ class API:
 
             process_func = self.process_functions.get(endpoint)
             if process_func:
+                if endpoint in ["weibo_hot", "douyin_hot"]:
+                    return process_func(data, endpoint.replace("_hot", "热搜"))
+                elif endpoint in ["twq", "dog", "renjian", "aiqinggongyu", "joke"]:
+                    error_msg = f"获取{endpoint.replace('_', '')}失败"
+                    return process_func(data, error_msg)
                 return process_func(data)
             raise ValueError(f"未知的API端点: {endpoint}")
         except Exception as e:
-            logger.error(f"Error getting content from online API: {e}")
-            raise ValueError(str(e))
+            error_msg = response_handler.format_error(e, endpoint)
+            logger.error(error_msg)
+            raise ValueError(error_msg)
 
     async def _get_hitokoto_content(self) -> str:
         """获取一言内容"""
@@ -128,7 +136,8 @@ class API:
             if result:
                 return result
         except Exception as e:
-            logger.warning(f"Failed to get hitokoto from local database: {e}")
+            error_msg = response_handler.format_error(e, "hitokoto")
+            logger.warning(error_msg)
 
         # 如果本地获取失败，尝试在线API
         random.shuffle(self.hitokoto_handlers)
@@ -146,7 +155,8 @@ class API:
             if result:
                 return result
         except Exception as e:
-            logger.warning(f"Failed to get dog diary from local database: {e}")
+            error_msg = response_handler.format_error(e, "dog")
+            logger.warning(error_msg)
 
         # 如果本地获取失败，尝试在线API
         urls = plugin_config.fun_content_api_urls.get("dog", [])
@@ -157,11 +167,13 @@ class API:
                 response = await self.client.get(url)
                 response.raise_for_status()
                 data = response.json()
-                result = self._process_dog(data)
+                error_msg = "获取舔狗日记失败"
+                result = response_handler.process_api_text(data, error_msg)
                 if result:
                     return result
             except Exception as e:
-                logger.error(f"Error in dog API {url}: {e}")
+                error_msg = response_handler.format_error(e, "dog")
+                logger.error(error_msg)
                 continue
 
         raise ValueError("获取舔狗日记失败")
@@ -173,7 +185,8 @@ class API:
             if result:
                 return result
         except Exception as e:
-            logger.warning(f"Failed to get beauty pic from local database: {e}")
+            error_msg = response_handler.format_error(e, "beauty_pic")
+            logger.warning(error_msg)
 
         # 如果本地获取失败，尝试在线API
         urls = plugin_config.fun_content_api_urls.get("beauty_pic", [])
@@ -188,7 +201,8 @@ class API:
                 if result:
                     return result
             except Exception as e:
-                logger.error(f"Error in beauty pic API {url}: {e}")
+                error_msg = response_handler.format_error(e, "beauty_pic")
+                logger.error(error_msg)
                 continue
 
         raise ValueError("获取美女图片失败")
@@ -208,8 +222,9 @@ class API:
             response.raise_for_status()
             return response.content
         except Exception as e:
-            logger.error(f"Error in CP API: {e}")
-            raise ValueError("生成CP图片失败")
+            error_msg = response_handler.format_error(e, "cp")
+            logger.error(error_msg)
+            raise ValueError(error_msg)
 
     async def close(self):
         """关闭HTTP客户端"""
@@ -231,35 +246,12 @@ class API:
     def _process_hitokoto_multiple(self, data: Union[Dict[str, Any], str]) -> str:
         return "获取一言失败"
 
-    def _process_twq(self, data: Dict[str, Any]) -> str:
-        return response_handler.process_api_text(data, "获取土味情话失败")
-
-    def _process_dog(self, data: Dict[str, Any]) -> str:
-        if isinstance(data, dict):
-            if data.get("code") in [200, "200"]:
-                content = data.get("data") or data.get("content")
-                if content:
-                    return content
-        return "获取舔狗日记失败"
-
-    def _process_renjian(self, data: Dict[str, Any]) -> str:
-        return response_handler.process_api_text(data, "获取人间凑数内容失败")
-
-    def _process_weibo_hot(self, data: Dict[str, Any]) -> str:
-        return response_handler.process_hot_list(data, "微博热搜")
-
-    def _process_aiqinggongyu(self, data: Dict[str, Any]) -> str:
-        return response_handler.process_api_text(data, "获取爱情公寓语录失败")
-
     def _process_shenhuifu(self, data: List[Dict[str, Any]]) -> str:
         if isinstance(data, list) and data:
-            return data[0].get("shenhuifu", "获取神回复失败").replace("<br>", "\n")
+            content = data[0].get("shenhuifu", "获取神回复失败")
+            error_msg = "获取神回复失败"
+            return response_handler.process_api_text({"data": content}, error_msg)
         return "获取神回复失败"
-
-    def _process_joke(self, data: Dict[str, Any]) -> str:
-        if data.get("success"):
-            return data.get("data", {}).get("content", "获取笑话失败")
-        return "获取笑话失败"
 
     def _process_beauty_pic(self, data: Dict[str, Any]) -> str:
         """处理美女图片API的响应"""
@@ -273,10 +265,6 @@ class API:
                 elif 'url' in data:
                     return data['url']
         return ""
-
-    def _process_douyin_hot(self, data: Dict[str, Any]) -> str:
-        """处理抖音热搜API的响应"""
-        return response_handler.process_hot_list(data, "抖音热搜")
 
 
 # 创建API实例

@@ -35,13 +35,14 @@ COMMANDS: dict[str, CommandConfig] = {
     "dog": {"aliases": ("舔狗日记", ["dog", "舔狗"]), "allow_args": False},
     "renjian": {"aliases": ("人间凑数", []), "allow_args": False},
     "weibo_hot": {"aliases": ("微博热搜", ["微博"]), "allow_args": False},
-    "douyin_hot": {"aliases": ("抖音热搜", ["抖音"]), "allow_args": False}, 
+    "douyin_hot": {"aliases": ("抖音热搜", ["抖音"]), "allow_args": False},
     "aiqinggongyu": {"aliases": ("爱情公寓", []), "allow_args": False},
     "beauty_pic": {"aliases": ("随机美女", ["美女"]), "allow_args": False},
     "cp": {"aliases": ("cp", ["宇宙cp"]), "allow_args": True},
     "shenhuifu": {"aliases": ("神回复", ["神评"]), "allow_args": False},
     "joke": {"aliases": ("讲个笑话", ["笑话"]), "allow_args": False},
 }
+
 
 def register_handlers():
     """注册所有的命令处理器"""
@@ -52,34 +53,35 @@ def register_handlers():
         matcher.handle()(handle_command(cmd))
 
     # 注册管理命令
-    enable_cmd = on_command("开启", 
-                           permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
-                           priority=1, block=True)
-    disable_cmd = on_command("关闭", 
+    enable_cmd = on_command("开启",
                             permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
                             priority=1, block=True)
-    status_cmd = on_command("功能状态", 
-                           permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
-                           priority=1, block=True)
+    disable_cmd = on_command("关闭",
+                             permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
+                             priority=1, block=True)
+    status_cmd = on_command("功能状态",
+                            permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
+                            priority=1, block=True)
 
     enable_cmd.handle()(handle_enable)
     disable_cmd.handle()(handle_disable)
     status_cmd.handle()(handle_status)
 
     # 注册定时任务相关命令
-    set_schedule_cmd = on_command("设置", 
-                                 permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
-                                 priority=1, block=True)
-    schedule_status_cmd = on_command("定时任务状态", 
-                                    permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
-                                    priority=1, block=True)
-    disable_schedule_cmd = on_command("定时任务禁用", 
+    set_schedule_cmd = on_command("设置",
+                                  permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
+                                  priority=1, block=True)
+    schedule_status_cmd = on_command("定时任务状态",
                                      permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
                                      priority=1, block=True)
+    disable_schedule_cmd = on_command("定时任务禁用",
+                                      permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER,
+                                      priority=1, block=True)
 
     set_schedule_cmd.handle()(handle_set_schedule)
     schedule_status_cmd.handle()(handle_schedule_status)
     disable_schedule_cmd.handle()(handle_disable_schedule)
+
 
 def is_strict_command_match(command: str, user_input: str) -> bool:
     """严格匹配指令"""
@@ -91,6 +93,7 @@ def is_strict_command_match(command: str, user_input: str) -> bool:
         return any(user_input.strip().lower().startswith(alias.lower()) for alias in all_aliases)
     else:
         return any(user_input.strip().lower() == alias.lower() for alias in all_aliases)
+
 
 def handle_command(command: str):
     """返回命令处理函数"""
@@ -129,7 +132,8 @@ def handle_command(command: str):
                 try:
                     await matcher.send(MessageSegment.image(BytesIO(image_data)))
                 except Exception as e:
-                    logger.error(f"Failed to send image for CP command: {e}")
+                    error_msg = response_handler.format_error(e, command)
+                    logger.error(f"Failed to send image for CP command: {error_msg}")
                     await matcher.send("CP图片生成成功，但发送失败。请稍后再试。")
 
             elif command == "beauty_pic":
@@ -137,7 +141,8 @@ def handle_command(command: str):
                     image_url = await api.get_beauty_pic()
                     await matcher.send(MessageSegment.image(image_url))
                 except Exception as e:
-                    logger.error(f"Failed to send beauty pic: {e}")
+                    error_msg = response_handler.format_error(e, command)
+                    logger.error(f"Failed to send beauty pic: {error_msg}")
                     await matcher.send("图片获取失败，请稍后再试。")
 
             else:
@@ -157,7 +162,8 @@ def handle_command(command: str):
                                 utils.set_cooldown(command, user_id, group_id, cooldown)
                                 return
                     except Exception as e:
-                        logger.warning(f"Database fetch failed for {command}: {e}")
+                        error_msg = response_handler.format_error(e, command)
+                        logger.warning(f"Database fetch failed for {command}: {error_msg}")
 
                 # 如果数据库获取失败或不支持，使用API
                 result = await api.get_content(command)
@@ -167,10 +173,11 @@ def handle_command(command: str):
 
         except Exception as e:
             error_msg = response_handler.format_error(e, command)
-            logger.error(f"Error in command {command}: {str(e)}")
+            logger.error(f"Error in command {command}: {error_msg}")
             await matcher.send(error_msg)
 
     return handler
+
 
 async def handle_enable(matcher: Matcher, event: GroupMessageEvent, args: Message = CommandArg()):
     """处理启用功能的命令"""
@@ -185,6 +192,7 @@ async def handle_enable(matcher: Matcher, event: GroupMessageEvent, args: Messag
 
     await matcher.finish(f"未找到名为 '{function}' 的功能。")
 
+
 async def handle_disable(matcher: Matcher, event: GroupMessageEvent, args: Message = CommandArg()):
     """处理禁用功能的命令"""
     function = args.extract_plain_text().strip()
@@ -198,6 +206,7 @@ async def handle_disable(matcher: Matcher, event: GroupMessageEvent, args: Messa
 
     await matcher.finish(f"未找到名为 '{function}' 的功能。")
 
+
 async def handle_status(matcher: Matcher, event: GroupMessageEvent):
     """获取当前群组功能状态"""
     group_id = str(event.group_id)
@@ -208,6 +217,7 @@ async def handle_status(matcher: Matcher, event: GroupMessageEvent):
         status_messages.append(f"{main_alias}: {status}")
 
     await matcher.finish("\n".join(status_messages))
+
 
 async def handle_set_schedule(matcher: Matcher, event: GroupMessageEvent, args: Message = CommandArg()):
     """处理设置定时任务的命令"""
@@ -227,6 +237,7 @@ async def handle_set_schedule(matcher: Matcher, event: GroupMessageEvent, args: 
     else:
         await matcher.finish("参数错误，请使用正确的格式：设置 [功能指令] [时间]")
 
+
 async def handle_schedule_status(matcher: Matcher, event: GroupMessageEvent):
     """获取当前群组的定时任务状态"""
     group_id = str(event.group_id)
@@ -240,6 +251,7 @@ async def handle_schedule_status(matcher: Matcher, event: GroupMessageEvent):
         await matcher.finish("\n".join(formatted_status))
     else:
         await matcher.finish("当前群组没有设置定时任务。")
+
 
 async def handle_disable_schedule(matcher: Matcher, event: GroupMessageEvent, args: Message = CommandArg()):
     """处理禁用定时任务的命令"""

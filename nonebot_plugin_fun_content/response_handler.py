@@ -1,6 +1,6 @@
 import re
 import sqlite3
-from typing import Any, Dict
+from typing import Any, Dict, List, Union
 
 import httpx
 
@@ -31,7 +31,8 @@ class ResponseHandler:
             "aiqinggongyu": "获取爱情公寓语录",
             "beauty_pic": "获取美女图片",
             "shenhuifu": "获取神回复",
-            "joke": "获取笑话"
+            "joke": "获取笑话",
+            "cp": "生成CP图片"
         }
 
         base_msg = f"{base_messages.get(endpoint, '请求')}失败"
@@ -97,6 +98,77 @@ class ResponseHandler:
                 return content
 
         return error_msg  # 返回错误信息，如果响应不符合预期或无内容
+
+    @staticmethod
+    def process_beauty_pic(data: Dict[str, Any]) -> str:
+        """处理美女图片API的响应"""
+        if 'code' in data:
+            if data['code'] in [200, '10000']:
+                if 'data' in data:
+                    if isinstance(data['data'], str):
+                        return data['data']
+                    elif isinstance(data['data'], list) and data['data']:
+                        return data['data'][0]
+                elif 'url' in data:
+                    return data['url']
+        return ""
+
+    @staticmethod
+    def process_shenhuifu(data: List[Dict[str, Any]]) -> str:
+        if isinstance(data, list) and data:
+            return data[0].get("shenhuifu", "获取神回复失败").replace("<br>", "\n")
+        return "获取神回复失败"
+
+    @staticmethod
+    def process_hitokoto_original(data: Dict[str, Any]) -> str:
+        return data.get("data", "获取一言失败")
+
+    @staticmethod
+    def process_hitokoto_text(data: str) -> str:
+        return data.strip() if data else "获取一言失败"
+
+    @staticmethod
+    def process_hitokoto_vvhan(data: Dict[str, Any]) -> str:
+        return data.get("data", {}).get("content", "获取一言失败") if data.get("success") else "获取一言失败"
+
+    @staticmethod
+    def process_hitokoto_multiple(data: Union[Dict[str, Any], str]) -> str:
+        return "获取一言失败"
+
+    @staticmethod
+    def process_twq(data: Dict[str, Any]) -> str:
+        return ResponseHandler.process_api_text(data, "获取土味情话失败")
+
+    @staticmethod
+    def process_dog(data: Dict[str, Any]) -> str:
+        if isinstance(data, dict):
+            if data.get("code") in [200, "200"]:
+                content = data.get("data") or data.get("content")
+                if content:
+                    return content
+        return "获取舔狗日记失败"
+
+    @staticmethod
+    def process_renjian(data: Dict[str, Any]) -> str:
+        return ResponseHandler.process_api_text(data, "获取人间凑数内容失败")
+
+    @staticmethod
+    def process_weibo_hot(data: Dict[str, Any]) -> str:
+        return ResponseHandler.process_hot_list(data, "微博热搜")
+
+    @staticmethod
+    def process_aiqinggongyu(data: Dict[str, Any]) -> str:
+        return ResponseHandler.process_api_text(data, "获取爱情公寓语录失败")
+
+    @staticmethod
+    def process_joke(data: Dict[str, Any]) -> str:
+        if data.get("success"):
+            return data.get("data", {}).get("content", "获取笑话失败")
+        return "获取笑话失败"
+
+    @staticmethod
+    def process_douyin_hot(data: Dict[str, Any]) -> str:
+        return ResponseHandler.process_hot_list(data, "抖音热搜")
 
 
 response_handler = ResponseHandler()
