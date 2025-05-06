@@ -66,7 +66,7 @@ async def plugin_init():
     # 检查数据库
     try:
         # 测试数据库连接和基本查询
-        test_content = db_manager.get_random_content("hitokoto")
+        test_content = await db_manager.get_random_content("hitokoto")
         if test_content is None:
             logger.warning("数据库连接成功但未能获取测试内容")
         else:
