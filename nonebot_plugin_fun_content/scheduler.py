@@ -1,8 +1,7 @@
-import logging
 from io import BytesIO
 from typing import Dict, List, Union, Optional, Tuple
 
-from nonebot import require, get_bot
+from nonebot import require, get_bot, logger
 from nonebot.adapters.onebot.v11 import MessageSegment, Message
 
 from .api import api
@@ -12,8 +11,6 @@ from .response_handler import response_handler
 # 导入 nonebot 的调度器
 scheduler = require("nonebot_plugin_apscheduler").scheduler
 
-# 设置日志记录器
-logger = logging.getLogger(__name__)
 
 class Scheduler:
     def __init__(self):
