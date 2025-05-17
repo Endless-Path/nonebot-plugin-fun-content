@@ -50,7 +50,7 @@ class ResponseHandler:
             return f"{base_msg}：发生未知错误"
 
     @classmethod
-    def process_hot_list(cls, data: Dict[str, Any], title: str) -> str:
+    def process_hot_list(cls, data: Dict[str, Any], endpoint: str) -> str:
         """处理热搜榜数据
 
         Args:
@@ -60,14 +60,20 @@ class ResponseHandler:
         Returns:
             str: 格式化后的热搜榜内容
         """
+        # 定义端点到显示名称的映射
+        endpoint_to_title = {
+            "weibo_hot": "微博热搜",
+            "douyin_hot": "抖音热搜",
+        }
+        display_title = endpoint_to_title.get(endpoint, "热搜")
         if data.get('code') == 200 or data.get('success'):
             items = data.get('data', [])
             if items:
-                return f"当前{title}：\n" + "\n".join(
+                return f"当前{display_title}：\n" + "\n".join(
                     f"{item['index']}. {item['title']} ({item.get('hot', '')})"
                     for item in items[:10]
                 )
-        return f"获取{title}失败"
+        return f"获取{display_title}失败"
 
     @staticmethod
     def process_api_text(data: Dict[str, Any], error_msg: str) -> str:
