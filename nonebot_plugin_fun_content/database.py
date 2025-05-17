@@ -1,6 +1,6 @@
 import asyncio
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 from contextlib import asynccontextmanager
 
 import aiosqlite
@@ -10,21 +10,27 @@ from .config import plugin_config
 
 
 class DatabasePool:
-    """数据库连接池"""
+    """数据库连接池
+    - 管理多个数据库连接，提高并发访问效率
+    - 实现连接的获取、释放和自动回收
+    """
     def __init__(self, db_path: Path, pool_size: int = 5):
         self.db_path = db_path
         self.pool_size = pool_size
-        self._pool: List[aiosqlite.Connection] = []
-        self._pool_lock = asyncio.Lock()
-        self._initialized = False
+        self._pool: List[aiosqlite.Connection] = []  # 连接池列表
+        self._pool_lock = asyncio.Lock()  # 用于线程安全的锁
+        self._initialized = False  # 初始化状态标志
 
     async def initialize(self):
-        """初始化连接池"""
+        """初始化连接池
+        - 创建指定数量的数据库连接
+        - 设置数据库连接参数
+        """
         if self._initialized:
             return
 
         async with self._pool_lock:
-            if self._initialized:  # 双重检查
+            if self._initialized:  # 双重检查锁定模式
                 return
 
             for _ in range(self.pool_size):
@@ -35,16 +41,24 @@ class DatabasePool:
             logger.success(f"Database pool initialized with {self.pool_size} connections")
 
     async def _create_connection(self) -> aiosqlite.Connection:
-        """创建新的数据库连接"""
+        """创建新的数据库连接
+        - 设置数据库连接参数
+        - 启用WAL模式提高并发性能
+        - 启用外键约束
+        """
         conn = await aiosqlite.connect(self.db_path)
         await conn.execute("PRAGMA journal_mode=WAL")  # 启用WAL模式
         await conn.execute("PRAGMA foreign_keys=ON")   # 启用外键约束
-        conn.row_factory = aiosqlite.Row
+        conn.row_factory = aiosqlite.Row  # 设置行工厂为字典类型
         return conn
 
     @asynccontextmanager
     async def acquire(self):
-        """获取数据库连接"""
+        """获取数据库连接的上下文管理器
+        - 从连接池获取连接或创建新连接
+        - 使用完毕后自动释放连接回池中
+        - 发生异常时关闭连接
+        """
         if not self._initialized:
             await self.initialize()
 
@@ -71,7 +85,10 @@ class DatabasePool:
             raise
 
     async def close_all(self):
-        """关闭所有连接"""
+        """关闭所有连接
+        - 清理连接池中的所有连接
+        - 设置初始化状态为False
+        """
         async with self._pool_lock:
             for conn in self._pool:
                 await conn.close()
@@ -82,7 +99,11 @@ class DatabasePool:
 
 class DatabaseManager:
     def __init__(self):
-        """初始化数据库管理器"""
+        """初始化数据库管理器
+        - 加载数据库配置
+        - 初始化数据库连接池
+        - 配置各数据表结构信息
+        """
         self.db_path = plugin_config.fun_content_db_path
         if not self.db_path.exists():
             logger.error(f"Database file not found at {self.db_path}")
@@ -137,14 +158,20 @@ class DatabaseManager:
 
     @staticmethod
     def _process_text(content: str) -> str:
-        """处理文本内容"""
+        """处理文本内容
+        - 替换HTML换行标签为实际换行符
+        - 去除多余空格和空行
+        """
         if not content:
             return ""
         content = content.replace("<br>", "\n").replace("<br/>", "\n")
         return "\n".join(line.strip() for line in content.split("\n") if line.strip())
 
     async def _fetch_one(self, query: str, params: tuple = ()) -> Optional[Dict[str, Any]]:
-        """执行查询并获取单条结果"""
+        """执行查询并获取单条结果
+        - 使用连接池获取数据库连接
+        - 执行SQL查询并返回字典形式的结果
+        """
         try:
             async with self.pool.acquire() as conn:
                 async with conn.execute(query, params) as cursor:
@@ -158,13 +185,10 @@ class DatabaseManager:
 
     async def get_random_content(self, command: str) -> Optional[str]:
         """获取随机内容
-
         Args:
-            command: 命令名称
-
+            command: 命令名称，对应不同的内容类型
         Returns:
             Optional[str]: 随机内容，如果出错则返回None
-
         Raises:
             ValueError: 如果命令未知
         """
@@ -191,7 +215,6 @@ class DatabaseManager:
 
     async def get_random_shenhuifu(self) -> Optional[Dict[str, str]]:
         """获取随机神回复
-
         Returns:
             Optional[Dict[str, str]]: 包含问题和答案的字典
         """
@@ -218,7 +241,6 @@ class DatabaseManager:
 
     async def get_random_beauty_pic(self) -> Optional[str]:
         """获取随机美女图片URL
-
         Returns:
             Optional[str]: 图片URL
         """
@@ -235,11 +257,9 @@ class DatabaseManager:
     async def batch_get_random_content(self, commands: List[str],
                                        batch_size: int = 10) -> Dict[str, List[str]]:
         """批量获取随机内容
-
         Args:
             commands: 要获取内容的命令列表
             batch_size: 每个命令获取的数量
-
         Returns:
             Dict[str, List[str]]: 命令到内容列表的映射
         """
