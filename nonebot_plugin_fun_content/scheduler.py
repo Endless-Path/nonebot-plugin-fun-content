@@ -5,7 +5,6 @@ from nonebot import require, get_bot, logger
 from nonebot.adapters.onebot.v11 import MessageSegment, Message
 
 from .api import api
-from .database import db_manager
 from .response_handler import response_handler
 
 # 导入 nonebot 的调度器
@@ -14,18 +13,21 @@ scheduler = require("nonebot_plugin_apscheduler").scheduler
 
 class Scheduler:
     def __init__(self):
-        """初始化 Scheduler 类"""
+        """初始化 Scheduler 类
+        - 管理定时任务的添加、删除和执行
+        - 使用字典结构存储任务配置
+        """
         self.jobs: Dict[str, Dict[str, List[str]]] = {}  # {group_id: {command: [time1, time2, ...]}}
 
     def add_job(self, group_id: str, command: str, time: str):
         """添加定时任务
-
         Args:
             group_id (str): 群组ID
             command (str): 要执行的命令
             time (str): 任务执行时间（格式：HH:MM）
         """
         try:
+            # 验证时间格式
             if not isinstance(time, str):
                 logger.error(f"Invalid time format for group {group_id}, command {command}: {time}")
                 return
@@ -41,6 +43,7 @@ class Scheduler:
                 logger.error(f"Invalid time values for group {group_id}, command {command}: {time}")
                 return
 
+            # 更新任务存储并添加到APScheduler
             if group_id not in self.jobs:
                 self.jobs[group_id] = {}
             if command not in self.jobs[group_id]:
@@ -65,12 +68,10 @@ class Scheduler:
 
     def remove_job(self, group_id: str, command: str, time: str) -> bool:
         """移除定时任务
-
         Args:
             group_id (str): 群组ID
             command (str): 要移除的命令
             time (str): 任务执行时间
-
         Returns:
             bool: 如果成功移除返回True，否则返回False
         """
@@ -91,10 +92,8 @@ class Scheduler:
 
     def get_schedule_status(self, group_id: str) -> Dict[str, List[str]]:
         """获取指定群组的定时任务状态
-
         Args:
             group_id (str): 群组ID
-
         Returns:
             Dict[str, List[str]]: 包含该群组所有定时任务的字典
         """
@@ -102,7 +101,6 @@ class Scheduler:
 
     async def run_scheduled_task(self, group_id: str, command: str):
         """执行定时任务
-
         Args:
             group_id (str): 群组ID
             command (str): 要执行的命令
@@ -111,6 +109,7 @@ class Scheduler:
             bot = get_bot()
             result = await self.execute_command(command)
 
+            # 处理不同类型的返回结果
             if isinstance(result, tuple):
                 # 处理返回多个消息的情况
                 for msg in result:
@@ -130,45 +129,21 @@ class Scheduler:
 
     async def execute_command(self, command: str) -> Optional[Union[Message, MessageSegment, Tuple[Message, ...], str]]:
         """执行指定的命令
-
         Args:
             command (str): 要执行的命令
-
         Returns:
             Optional[Union[Message, MessageSegment, Tuple[Message, ...], str]]: 命令执行的结果
         """
         try:
+            # 不同命令的特殊处理
             if command == "beauty_pic":
-                # 优先从数据库获取
-                image_url = await db_manager.get_random_beauty_pic()
-                if not image_url:
-                    image_url = await api.get_beauty_pic()
+                image_url = await api.get_content(command)
                 return MessageSegment.image(image_url)
 
             elif command == "cp":
                 # CP命令需要默认角色名
                 image_data = await api.get_cp_content("默认CP 默认CP2")
                 return MessageSegment.image(BytesIO(image_data))
-
-            elif command in ["hitokoto", "twq", "dog", "aiqinggongyu", "renjian", "joke", "shenhuifu"]:
-                # 优先从数据库获取
-                if command == "shenhuifu":
-                    result = await db_manager.get_random_shenhuifu()
-                    if result:
-                        return Message(f"问：{result['question']}\n答：{result['answer']}")
-                else:
-                    result = await db_manager.get_random_content(command)
-                    if result:
-                        return Message(result)
-
-                # 如果数据库获取失败，使用API
-                result = await api.get_content(command)
-                return Message(result)
-
-            elif command in ["weibo_hot", "douyin_hot"]:
-                result = await api.get_content(command)
-                return Message(result)
-
             else:
                 result = await api.get_content(command)
                 return Message(result)
@@ -178,7 +153,10 @@ class Scheduler:
             raise
 
     def clear_all_jobs(self):
-        """清除所有定时任务"""
+        """清除所有定时任务
+        - 遍历并删除所有已注册的定时任务
+        - 清空任务存储字典
+        """
         for group_id in list(self.jobs.keys()):
             for command in list(self.jobs[group_id].keys()):
                 for time in list(self.jobs[group_id][command]):
