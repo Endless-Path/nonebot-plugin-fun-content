@@ -1,7 +1,3 @@
-import random
-from functools import wraps
-from typing import Any, Dict, List, Union
-
 import httpx
 
 from nonebot import logger
@@ -12,98 +8,76 @@ from .response_handler import response_handler
 
 class API:
     def __init__(self):
-        """初始化 API 类"""
+        """初始化API客户端"""
+        # 创建异步HTTP客户端，设置超时和重定向策略
         self.client = httpx.AsyncClient(timeout=10.0, follow_redirects=True)
-        self.hitokoto_handlers = []
+        # 注册不同API端点对应的响应处理器
         self.process_functions = {
-            "hitokoto": self._process_hitokoto_multiple,
-            "twq": response_handler.process_api_text,
-            "dog": response_handler.process_api_text,
-            "renjian": response_handler.process_api_text,
             "weibo_hot": response_handler.process_hot_list,
-            "aiqinggongyu": response_handler.process_api_text,
-            "shenhuifu": self._process_shenhuifu,
-            "joke": response_handler.process_api_text,
-            "beauty_pic": self._process_beauty_pic,
             "douyin_hot": response_handler.process_hot_list,
         }
-        self._setup_hitokoto_handlers()
 
-    @staticmethod
-    def hitokoto_handler(url):
-        """一言处理器的装饰器"""
-        def decorator(func):
-            @wraps(func)
-            async def wrapper(self):
-                try:
-                    logger.info(f"Sending hitokoto request to {url}")
-                    response = await self.client.get(url)
-                    response.raise_for_status()
-
-                    if response.headers.get('content-type', '').startswith('application/json'):
-                        data = response.json()
-                    else:
-                        data = response.text
-
-                    logger.success(f"Received hitokoto response from {url}")
-                    return func(data)
-                except Exception as e:
-                    error_msg = response_handler.format_error(e, "hitokoto")
-                    logger.error(error_msg)
-                return None
-            return wrapper
-        return decorator
-
-    def _setup_hitokoto_handlers(self):
-        """设置一言处理器"""
-        self.hitokoto_handlers = [
-            self.hitokoto_handler("https://v2.api-m.com/api/yiyan?type=hitokoto")(self._process_hitokoto_original),
-            self.hitokoto_handler("https://uapis.cn/api/say")(self._process_hitokoto_text),
-            self.hitokoto_handler("https://tenapi.cn/v2/yiyan")(self._process_hitokoto_text),
-            self.hitokoto_handler("https://api.vvhan.com/api/ian/rand?type=json")(self._process_hitokoto_vvhan)
-        ]
-
-    async def get_content(self, endpoint: str) -> str:
+    async def get_content(self, endpoint):
         """获取指定API端点的内容
-
+        
         Args:
-            endpoint: API端点名称
-
+            endpoint: API端点名称，如"weibo_hot"、"shenhuifu"等
+        
         Returns:
-            str: 获取的内容
-
+            格式化后的内容字符串
+        
         Raises:
-            ValueError: 如果获取失败
+            ValueError: 当端点无效或获取内容失败时
         """
-        # 特殊处理的端点
-        if endpoint == "hitokoto":
-            return await self._get_hitokoto_content()
+        # 特殊端点处理逻辑
+        if endpoint == "cp":
+            raise ValueError("CP命令需要使用get_cp_content方法并提供参数")
         elif endpoint == "beauty_pic":
-            return await self.get_beauty_pic()
-        elif endpoint == "dog":
-            return await self._get_dog_content()
+            # 从数据库获取随机美女图片
+            try:
+                result = await db_manager.get_random_beauty_pic()
+                if result:
+                    return result
+            except Exception as e:
+                error_msg = response_handler.format_error(e, endpoint)
+                logger.error(f"从数据库获取{endpoint}失败: {error_msg}")
+                raise ValueError(f"获取{endpoint}失败")
 
-        # 尝试从本地数据库获取
+        # 处理需要调用在线API的端点
+        elif endpoint in ["weibo_hot", "douyin_hot"]:
+            return await self._get_online_content(endpoint)
+
+        # 从本地数据库获取其他类型内容
         try:
-            if endpoint in plugin_config.DATABASE_SUPPORTED_COMMANDS:
-                if endpoint == "shenhuifu":
-                    result = await db_manager.get_random_shenhuifu()
-                    if result:
-                        return f"问：{result['question']}\n答：{result['answer']}"
-                else:
-                    result = await db_manager.get_random_content(endpoint)
-                    if result:
-                        return result
+            if endpoint == "shenhuifu":
+                # 获取神回复内容（问答形式）
+                result = await db_manager.get_random_shenhuifu()
+                if result:
+                    return f"问：{result['question']}\n答：{result['answer']}"
+            else:
+                # 获取其他随机内容
+                result = await db_manager.get_random_content(endpoint)
+                if result:
+                    return result
 
         except Exception as e:
             error_msg = response_handler.format_error(e, endpoint)
-            logger.warning(error_msg)
+            logger.error(f"从数据库获取{endpoint}失败: {error_msg}")
+            raise ValueError(f"获取{endpoint}失败")
 
-        # 如果本地数据库获取失败或不支持的端点，使用在线API
-        return await self._get_online_content(endpoint)
+        # 未知端点处理
+        raise ValueError(f"未知的API端点: {endpoint}")
 
-    async def _get_online_content(self, endpoint: str) -> str:
-        """从在线API获取内容"""
+    async def _get_online_content(self, endpoint):
+        """从在线API获取内容（私有方法）
+        
+        Args:
+            endpoint: 在线API端点名称
+        
+        Returns:
+            处理后的内容字符串
+        """
+        # 从配置中获取API URL
         url = plugin_config.fun_content_api_urls.get(endpoint)
         if not url:
             raise ValueError(f"未知的API端点: {endpoint}")
@@ -111,108 +85,34 @@ class API:
         try:
             logger.info(f"Sending request to {url}")
             response = await self.client.get(url)
-            response.raise_for_status()
-            data = response.json()
+            response.raise_for_status()  # 检查HTTP响应状态
+            data = response.json()  # 解析JSON响应
             logger.success(f"Received response from {url}")
 
+            # 使用注册的处理器处理响应数据
             process_func = self.process_functions.get(endpoint)
             if process_func:
-                if endpoint in ["weibo_hot", "douyin_hot"]:
-                    return process_func(data, endpoint.replace("_hot", "热搜"))
-                elif endpoint in ["twq", "dog", "renjian", "aiqinggongyu", "joke"]:
-                    error_msg = f"获取{endpoint.replace('_', '')}失败"
-                    return process_func(data, error_msg)
-                return process_func(data)
+                return process_func(data, endpoint)
             raise ValueError(f"未知的API端点: {endpoint}")
         except Exception as e:
             error_msg = response_handler.format_error(e, endpoint)
             logger.error(error_msg)
             raise ValueError(error_msg)
 
-    async def _get_hitokoto_content(self) -> str:
-        """获取一言内容"""
-        try:
-            result = await db_manager.get_random_content("hitokoto")
-            if result:
-                return result
-        except Exception as e:
-            error_msg = response_handler.format_error(e, "hitokoto")
-            logger.warning(error_msg)
-
-        # 如果本地获取失败，尝试在线API
-        random.shuffle(self.hitokoto_handlers)
-        for handler in self.hitokoto_handlers:
-            result = await handler(self)
-            if result:
-                return result
-
-        raise ValueError("获取一言失败")
-
-    async def _get_dog_content(self) -> str:
-        """获取舔狗日记内容"""
-        try:
-            result = await db_manager.get_random_content("dog")
-            if result:
-                return result
-        except Exception as e:
-            error_msg = response_handler.format_error(e, "dog")
-            logger.warning(error_msg)
-
-        # 如果本地获取失败，尝试在线API
-        urls = plugin_config.fun_content_api_urls.get("dog", [])
-        random.shuffle(urls)
-
-        for url in urls:
-            try:
-                response = await self.client.get(url)
-                response.raise_for_status()
-                data = response.json()
-                error_msg = "获取舔狗日记失败"
-                result = response_handler.process_api_text(data, error_msg)
-                if result:
-                    return result
-            except Exception as e:
-                error_msg = response_handler.format_error(e, "dog")
-                logger.error(error_msg)
-                continue
-
-        raise ValueError("获取舔狗日记失败")
-
-    async def get_beauty_pic(self) -> str:
-        """获取随机美女图片URL"""
-        try:
-            result = await db_manager.get_random_beauty_pic()
-            if result:
-                return result
-        except Exception as e:
-            error_msg = response_handler.format_error(e, "beauty_pic")
-            logger.warning(error_msg)
-
-        # 如果本地获取失败，尝试在线API
-        urls = plugin_config.fun_content_api_urls.get("beauty_pic", [])
-        random.shuffle(urls)
-
-        for url in urls:
-            try:
-                response = await self.client.get(url)
-                response.raise_for_status()
-                data = response.json()
-                result = self._process_beauty_pic(data)
-                if result:
-                    return result
-            except Exception as e:
-                error_msg = response_handler.format_error(e, "beauty_pic")
-                logger.error(error_msg)
-                continue
-
-        raise ValueError("获取美女图片失败")
-
-    async def get_cp_content(self, args: str) -> bytes:
-        """获取CP内容"""
+    async def get_cp_content(self, args):
+        """获取CP内容（角色配对图片）
+        
+        Args:
+            args: 包含两个角色名称的字符串，用空格分隔
+        
+        Returns:
+            图片二进制数据
+        """
         names = args.split()
         if len(names) < 2:
             raise ValueError('请提供两个角色名称！')
 
+        # 获取CP API URL并发送请求
         url = plugin_config.fun_content_api_urls.get("cp")
         if not url:
             raise ValueError("CP API配置错误")
@@ -220,52 +120,16 @@ class API:
         try:
             response = await self.client.get(url, params={"n1": names[0], "n2": names[1]})
             response.raise_for_status()
-            return response.content
+            return response.content  # 返回图片二进制数据
         except Exception as e:
             error_msg = response_handler.format_error(e, "cp")
             logger.error(error_msg)
             raise ValueError(error_msg)
 
     async def close(self):
-        """关闭HTTP客户端"""
+        """关闭HTTP客户端连接池"""
         await self.client.aclose()
 
-    # API响应处理函数
-    @staticmethod
-    def _process_hitokoto_original(data: Dict[str, Any]) -> str:
-        return data.get("data", "获取一言失败")
 
-    @staticmethod
-    def _process_hitokoto_text(data: str) -> str:
-        return data.strip() if data else "获取一言失败"
-
-    @staticmethod
-    def _process_hitokoto_vvhan(data: Dict[str, Any]) -> str:
-        return data.get("data", {}).get("content", "获取一言失败") if data.get("success") else "获取一言失败"
-
-    def _process_hitokoto_multiple(self, data: Union[Dict[str, Any], str]) -> str:
-        return "获取一言失败"
-
-    def _process_shenhuifu(self, data: List[Dict[str, Any]]) -> str:
-        if isinstance(data, list) and data:
-            content = data[0].get("shenhuifu", "获取神回复失败")
-            error_msg = "获取神回复失败"
-            return response_handler.process_api_text({"data": content}, error_msg)
-        return "获取神回复失败"
-
-    def _process_beauty_pic(self, data: Dict[str, Any]) -> str:
-        """处理美女图片API的响应"""
-        if 'code' in data:
-            if data['code'] in [200, '10000']:
-                if 'data' in data:
-                    if isinstance(data['data'], str):
-                        return data['data']
-                    elif isinstance(data['data'], list) and data['data']:
-                        return data['data'][0]
-                elif 'url' in data:
-                    return data['url']
-        return ""
-
-
-# 创建API实例
+# API单例实例
 api = API()
