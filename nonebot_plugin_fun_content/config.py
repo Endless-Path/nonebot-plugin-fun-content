@@ -1,8 +1,8 @@
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, List
 
 from nonebot import get_driver
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field
 
 class Config(BaseModel):
     # 数据库配置
@@ -12,37 +12,14 @@ class Config(BaseModel):
     )
 
     # API URLs配置
-    fun_content_api_urls: Dict[str, Union[HttpUrl, List[HttpUrl]]] = Field(
-        default={
-            "hitokoto": [
-                "https://v2.api-m.com/api/yiyan?type=hitokoto",
-                "https://uapis.cn/api/say",
-                "https://tenapi.cn/v2/yiyan",
-                "https://api.vvhan.com/api/ian/rand?type=json"
-            ],
-            "twq": "https://jkapi.com/api/tuweiqinghua?type=json",
-            "dog": [
-                "https://v2.api-m.com/api/dog",
-                "https://api.52vmy.cn/api/wl/yan/tiangou",
-                "https://api.xiaole.work/api/dog/dog.php?format=json"
-            ],
-            "renjian": "https://v2.api-m.com/api/renjian",
-            "weibo_hot": "https://v2.api-m.com/api/weibohot",
-            "douyin_hot": "https://api.vvhan.com/api/hotlist/douyinHot",
-            "aiqinggongyu": "https://v2.api-m.com/api/aiqinggongyu",
-            "beauty_pic": [
-                "https://v2.api-m.com/api/baisi",
-                "https://v2.api-m.com/api/meinvpic",
-                "https://v2.api-m.com/api/heisi",
-                "https://api.52vmy.cn/api/img/tu/girl",
-                "https://api.unmz.net/free/api/images/girl/getRandomGirlUrl?size=1"
-            ],
-            "cp": "https://www.hhlqilongzhu.cn/api/tu_lofter_cp.php",
-            "shenhuifu": "https://v.api.aa1.cn/api/api-wenan-shenhuifu/index.php?aa1=json",
-            "joke": "https://api.vvhan.com/api/text/joke?type=json",
-        },
-        env="FUN_CONTENT_API_URLS"
-    )
+    fun_content_api_urls: Dict[str, str] = Field(
+    default={
+        "weibo_hot": "https://v2.api-m.com/api/weibohot",
+        "douyin_hot": "https://api.vvhan.com/api/hotlist/douyinHot",
+        "cp": "https://www.hhlqilongzhu.cn/api/tu_lofter_cp.php",
+    },
+    env="FUN_CONTENT_API_URLS",
+)
 
     # 功能冷却时间配置（秒）
     fun_content_cooldowns: Dict[str, int] = Field(
