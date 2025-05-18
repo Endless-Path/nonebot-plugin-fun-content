@@ -19,13 +19,13 @@ class API:
 
     async def get_content(self, endpoint):
         """获取指定API端点的内容
-        
+
         Args:
             endpoint: API端点名称，如"weibo_hot"、"shenhuifu"等
-        
+
         Returns:
             格式化后的内容字符串
-        
+
         Raises:
             ValueError: 当端点无效或获取内容失败时
         """
@@ -70,10 +70,10 @@ class API:
 
     async def _get_online_content(self, endpoint):
         """从在线API获取内容（私有方法）
-        
+
         Args:
             endpoint: 在线API端点名称
-        
+
         Returns:
             处理后的内容字符串
         """
@@ -101,16 +101,22 @@ class API:
 
     async def get_cp_content(self, args):
         """获取CP内容（角色配对图片）
-        
+
         Args:
             args: 包含两个角色名称的字符串，用空格分隔
-        
+
         Returns:
             图片二进制数据
         """
         names = args.split()
         if len(names) < 2:
-            raise ValueError('请提供两个角色名称！')
+            raise ValueError('请输入两个角色名称，用空格分隔（例如：张三 李四）')
+
+        # 检查每个名称的长度是否超过6个中文字符
+        for name in names:
+            # 使用中文字符长度计算
+            if len(name.encode('utf-8')) > 18:  # 6个中文字符 * 3字节/字符 = 18字节
+                raise ValueError(f'角色名称"{name}"长度超过6个汉字，请控制在6个汉字以内')
 
         # 获取CP API URL并发送请求
         url = plugin_config.fun_content_api_urls.get("cp")
