@@ -1,7 +1,7 @@
 from io import BytesIO
 from typing import TypedDict
 
-from nonebot import on_command, logger
+from nonebot import on_command, logger, get_bot
 from nonebot.adapters.onebot.v11 import (
     MessageSegment, Message, MessageEvent, GroupMessageEvent
 )
@@ -117,7 +117,7 @@ def handle_command(command: str):
                 logger.info(f"Function {command} is disabled in group {group_id}")
                 await matcher.finish(f"该功能在本群已被禁用")
 
-        command_args = args.extract_plain_text().strip()
+        command_args = await _process_command_args(command, event, args)
         # 检查命令参数合法性
         if not COMMANDS[command]["allow_args"] and command_args:
             await matcher.finish()
@@ -282,3 +282,48 @@ async def handle_disable_schedule(matcher: Matcher, event: GroupMessageEvent, ar
                 await matcher.finish("时间格式错误，请使用 HH:MM 格式。")
 
     await matcher.finish(f"未找到名为 '{function}' 的功能。")
+
+async def _process_command_args(command, event, args: Message = CommandArg()):
+    """处理命令参数，严格返回两个名称，且只允许纯文本或纯@用户"""
+    if command != "cp":
+        return args.extract_plain_text().strip()
+
+    has_text = False  # 是否包含文本段
+    has_at = False    # 是否包含@用户段
+    names = []
+    
+    for seg in args:
+        # 处理@用户段
+        if seg.type == "at":
+            qq = seg.data.get("qq")
+            if not qq:
+                continue
+
+            try:
+                if isinstance(event, GroupMessageEvent):
+                    group_id = event.group_id
+                    bot = get_bot()
+                    member_info = await bot.get_group_member_info(group_id=group_id, user_id=qq)
+                    name = member_info.get("card") or member_info.get("nickname", str(qq))
+                else:
+                    name = str(qq)
+
+                names.append(name)
+                has_at = True
+            except Exception as e:
+                logger.error(f"获取用户信息失败: {e}")
+                names.append(str(qq))
+
+        # 处理文本段
+        elif seg.type == "text":
+            text = seg.data.get("text", "").strip()
+            if text:
+                names.extend(text.split())
+                has_text = True
+
+    # 检查是否混用了文本和@用户
+    if has_text and has_at:
+        return ""  # 混用了文本和@用户，返回空字符串
+
+    # 严格返回两个名称，否则返回空字符串
+    return " ".join(names[:2]) if len(names) == 2 else ""
